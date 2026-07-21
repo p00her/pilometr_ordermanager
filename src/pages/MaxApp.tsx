@@ -27,14 +27,25 @@ export default function MaxApp() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'done' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const [debug, setDebug] = useState('');
 
   useEffect(() => {
     const wa = window.WebApp;
-    if (wa?.initDataUnsafe) {
+    if (wa) {
       const data = wa.initDataUnsafe;
-      const id = data.chat?.id || data.user?.id;
-      if (id) setChatId(String(id));
-      wa.ready();
+      if (data) {
+        setDebug('WebApp.initDataUnsafe: ' + JSON.stringify(data));
+        const id = data.chat?.id || data.user?.id;
+        if (id) setChatId(String(id));
+        wa.ready();
+      } else {
+        setDebug('WebApp.initData: ' + (wa.initData || '(empty)'));
+        setMessage('initDataUnsafe отсутствует. WebApp есть, но нет данных инициализации.');
+        setStatus('error');
+      }
+    } else {
+      setMessage('Объект WebApp не найден. Откройте страницу из приложения MAX через бота.');
+      setStatus('error');
     }
     setStatus('ready');
   }, []);
@@ -111,6 +122,11 @@ export default function MaxApp() {
               <Alert severity={status === 'error' ? 'error' : 'info'} sx={{ mt: 2 }}>
                 {message}
               </Alert>
+            )}
+            {debug && (
+              <Box sx={{ mt: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1, fontSize: 11, wordBreak: 'break-all' }}>
+                {debug}
+              </Box>
             )}
           </>
         )}
