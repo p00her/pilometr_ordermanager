@@ -43,8 +43,9 @@ app.use(express.json({ limit: '10mb' }));
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-app.use(createProxyMiddleware('/endpoint.php', {
+app.use(createProxyMiddleware({
   target: 'https://pilometr.ru',
+  pathFilter: '/endpoint.php',
   changeOrigin: true,
   headers: { Host: 'pilometr.ru' },
   on: {
