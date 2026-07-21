@@ -85,20 +85,19 @@ export default function Dashboard() {
     setError('');
     try {
       const data = await getStats(API_URL, dateFrom, dateTo);
-      if (data && data.total) {
-        (['in_progress', 'ready', 'closed', 'cancelled'] as const).forEach((g) => {
-          if (!data.total[g]) {
-            data.total[g] = { total: 0, total_order_price: 0, total_weight: 0, total_volume: 0 };
-          }
-        });
-        Object.values(data.by_delivery || {}).forEach((group) => {
-          (['in_progress', 'ready', 'closed', 'cancelled'] as const).forEach((g) => {
-            if (!group[g]) {
-              group[g] = { total: 0, total_order_price: 0, total_weight: 0, total_volume: 0 };
-            }
-          });
-        });
+      if (!data || typeof data.total === 'undefined') {
+        setStats(null);
+        return;
       }
+      const fill = { total: 0, total_order_price: 0, total_weight: 0, total_volume: 0 };
+      (['in_progress', 'ready', 'closed', 'cancelled'] as const).forEach((g) => {
+        if (!data.total[g]) data.total[g] = { ...fill };
+      });
+      Object.values(data.by_delivery || {}).forEach((group) => {
+        (['in_progress', 'ready', 'closed', 'cancelled'] as const).forEach((g) => {
+          if (!group[g]) group[g] = { ...fill };
+        });
+      });
       setStats(data);
     } catch {
       setError('Ошибка загрузки статистики');
