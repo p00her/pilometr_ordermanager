@@ -16,8 +16,10 @@ import {
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
 import { getMaxSettings, updateMaxSettings, type MaxNotificationSettings } from '../api/maxApi';
 
+type NotifyKey = 'new_order' | 'order_ready' | 'order_cancelled';
+
 interface NotifySetting {
-  key: keyof MaxNotificationSettings;
+  key: NotifyKey;
   label: string;
   desc: string;
 }
@@ -53,7 +55,7 @@ export default function MaxSettings() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleToggle = (key: keyof MaxNotificationSettings) => {
+  const handleToggle = (key: NotifyKey) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -157,7 +159,7 @@ export default function MaxSettings() {
                 onChange={handleDeliveryAll}
               />
             }
-            label={<Typography variant="body2" fontWeight={600}>Все способы</Typography>}
+            label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Все способы</Typography>}
             sx={{ mb: 0.5 }}
           />
           {Object.entries(dMethods)
