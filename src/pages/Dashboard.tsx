@@ -137,7 +137,7 @@ export default function Dashboard() {
               <Grid size={{ xs: 12, md: 3 }} key={g}>
                 <StatCard
                   title={GROUP_LABELS[g]}
-                  data={stats.total[g]!}
+                  data={stats.total[g] ?? { total: 0, total_order_price: 0, total_weight: 0, total_volume: 0 }}
                   color={`${GROUP_COLORS[g]}.main`}
                 />
               </Grid>
