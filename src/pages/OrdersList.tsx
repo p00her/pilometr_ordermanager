@@ -419,13 +419,13 @@ export default function OrdersList() {
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>Получатель</TableCell>
-                  <TableCell>Телефон</TableCell>
-                  <TableCell>E-mail</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Телефон</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>E-mail</TableCell>
                   <TableCell>Сумма</TableCell>
                   <TableCell>Статус</TableCell>
-                  <TableCell>Способ получения</TableCell>
-                  <TableCell>Способ оплаты</TableCell>
-                  <TableCell>Статус оплаты</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Способ получения</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Способ оплаты</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Статус оплаты</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -439,8 +439,8 @@ export default function OrdersList() {
                     <TableCell>{order.number}</TableCell>
                     <TableCell>{order.order_date}</TableCell>
                     <TableCell>{order.poluchatel}</TableCell>
-                    <TableCell>{order.mobtelefon}</TableCell>
-                    <TableCell>{order.email ?? '—'}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{order.mobtelefon}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{order.email ?? '—'}</TableCell>
                     <TableCell>
                       {order.price?.toLocaleString('ru-RU', {
                         style: 'currency',
@@ -462,17 +462,17 @@ export default function OrdersList() {
                         );
                       })()}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       {refData?.d_methods[order.delivery_id ?? -1] ??
                         order.delivery_method ??
                         '—'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       {refData?.p_methods[order.payment_id ?? -1] ??
                         order.payment_method ??
                         '—'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
                       {refData?.p_statuses[order.payment_status_id ?? -1] ??
                         order.payment_status ??
                         '—'}
