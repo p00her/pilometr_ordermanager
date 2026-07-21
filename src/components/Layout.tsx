@@ -65,14 +65,14 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar sx={{ justifyContent: 'center', px: sidebarCollapsed ? 0 : 2 }}>
+      <Toolbar sx={{ px: sidebarCollapsed ? 0 : 2 }}>
         {sidebarCollapsed ? (
           <IconButton onClick={() => setSidebarCollapsed(false)}>
             <ChevronRightIcon />
           </IconButton>
         ) : (
           <>
-            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" noWrap sx={{ mr: 'auto' }}>
               Магазины
             </Typography>
             <IconButton onClick={() => setSidebarCollapsed(true)}>
