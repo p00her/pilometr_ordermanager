@@ -195,7 +195,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
             ModalProps={{ keepMounted: true }}
-            PaperProps={{ sx: { width: 260 } }}
+            slotProps={{ paper: { sx: { width: 260 } } }}
           >
             {drawer}
           </Drawer>
