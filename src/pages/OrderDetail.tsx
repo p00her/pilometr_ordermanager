@@ -30,6 +30,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
+import Barcode from '../components/Barcode';
 import {
   getItemStorage,
   updateOrder,
@@ -540,7 +541,7 @@ export default function OrderDetail() {
                 <TableRow key={idx}>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.artikul ?? '—'}</TableCell>
-                  <TableCell>{item.bar_code ?? '—'}</TableCell>
+                  <TableCell><Barcode value={item.bar_code ?? ''} /></TableCell>
                   <TableCell>
                     <span className="no-print">
                       <TextField
