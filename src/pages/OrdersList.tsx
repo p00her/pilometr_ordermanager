@@ -472,6 +472,11 @@ export default function OrdersList() {
                             size="small"
                             color={isOrderPaying ? 'default' : (STATUS_COLORS[String(sid)] ?? 'default')}
                             style={isOrderPaying ? { backgroundColor: '#636B2F', color: '#fff', fontWeight: 600 } : undefined}
+                            sx={{
+                              whiteSpace: 'normal',
+                              height: 'auto',
+                              '& .MuiChip-label': { whiteSpace: 'normal', overflow: 'visible', display: 'block' },
+                            }}
                           />
                         );
                       })()}
