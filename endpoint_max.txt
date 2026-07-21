@@ -10,18 +10,17 @@ define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
 Затем в блоке publicModes добавить 'register_chat':
 	$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings'];
 
-После auth-режимов (после case 'checkauth') добавить:
+После auth-режимов (после вызова include/констант, перед switch ($mode)) добавить:
 
-// ====== MAX УВЕДОМЛЕНИЯ ======
+// ====== MAX УВЕДОМЛЕНИЯ (ФУНКЦИИ) ======
 
 /* --- Вспомогательная функция отправки сообщения в чат MAX --- */
-function maxSendMessage($token, $chatId, $text) {
+function maxSendMessage($token, $userId, $text) {
 	$payload = json_encode(array(
-		'chat_id' => $chatId,
 		'text' => $text,
 		'format' => 'html',
 	));
-	$ch = curl_init('https://platform-api2.max.ru/messages');
+	$ch = curl_init('https://platform-api2.max.ru/messages?user_id=' . urlencode($userId));
 	curl_setopt($ch, CURLOPT_POST, true);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array(

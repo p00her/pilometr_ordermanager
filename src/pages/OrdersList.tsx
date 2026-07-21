@@ -175,7 +175,7 @@ export default function OrdersList() {
 
   useEffect(() => {
     if (!autoRefresh) return;
-    const id = setInterval(() => sync(), 30000);
+    const id = setInterval(() => sync(), 10000);
     return () => clearInterval(id);
   }, [autoRefresh, sync]);
 
