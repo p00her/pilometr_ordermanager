@@ -40,34 +40,68 @@ async function initDb() {
 const app = express();
 
 app.use('/endpoint.php', (req, res) => {
+  let baseUrl = '/endpoint.php';
   const query = req.url.replace(/^\//, '');
-  const options = {
-    hostname: 'pilometr.ru',
-    port: 443,
-    path: '/endpoint.php' + (query ? '?' + query : ''),
-    method: req.method,
-    headers: {
-      ...req.headers,
-      Host: 'pilometr.ru',
-      'X-Real-IP': req.headers['x-forwarded-for'] || req.socket.remoteAddress || '',
-      'X-Forwarded-Proto': 'https',
-    },
-    rejectUnauthorized: false,
+  if (query) baseUrl += '?' + query;
+
+  const headers = { ...req.headers, Host: 'pilometr.ru' };
+  headers['X-Real-IP'] = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  headers['X-Forwarded-Proto'] = 'https';
+  delete headers['sec-fetch-site'];
+  delete headers['sec-fetch-mode'];
+  delete headers['sec-fetch-dest'];
+  delete headers['sec-ch-ua'];
+  delete headers['sec-ch-ua-mobile'];
+  delete headers['sec-ch-ua-platform'];
+
+  const sendRequest = (method, path, body) => {
+    const options = {
+      hostname: 'pilometr.ru',
+      port: 443,
+      path,
+      method,
+      headers: { ...headers },
+      rejectUnauthorized: false,
+    };
+    if (body) {
+      options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      options.headers['Content-Length'] = Buffer.byteLength(body);
+    }
+    const proxyReq = https.request(options, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res);
+    });
+    proxyReq.on('error', (err) => {
+      res.status(500).send('Proxy error: ' + err.message);
+    });
+    if (body) proxyReq.end(body);
+    else req.pipe(proxyReq);
   };
-  delete options.headers['sec-fetch-site'];
-  delete options.headers['sec-fetch-mode'];
-  delete options.headers['sec-fetch-dest'];
-  delete options.headers['sec-ch-ua'];
-  delete options.headers['sec-ch-ua-mobile'];
-  delete options.headers['sec-ch-ua-platform'];
-  const proxyReq = https.request(options, (proxyRes) => {
-    res.writeHead(proxyRes.statusCode, proxyRes.headers);
-    proxyRes.pipe(res);
-  });
-  proxyReq.on('error', (err) => {
-    res.status(500).send('Proxy error: ' + err.message);
-  });
-  req.pipe(proxyReq);
+
+  if (req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      let params = [];
+      if (body) {
+        try {
+          const json = JSON.parse(body);
+          for (const [k, v] of Object.entries(json)) {
+            params.push(encodeURIComponent(k) + '=' + encodeURIComponent(String(v)));
+          }
+        } catch {
+          for (const part of body.split('&')) {
+            const [k, v] = part.split('=').map(s => decodeURIComponent(s));
+            params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v || ''));
+          }
+        }
+      }
+      const sep = baseUrl.includes('?') ? '&' : '?';
+      sendRequest('GET', baseUrl + sep + params.join('&'));
+    });
+  } else {
+    sendRequest(req.method, baseUrl);
+  }
 });
 
 app.use(express.json({ limit: '10mb' }));
