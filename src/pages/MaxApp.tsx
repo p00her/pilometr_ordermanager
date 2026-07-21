@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  CircularProgress,
-  Paper,
+  Box, Typography, TextField, Button, Alert, CircularProgress, Paper,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { registerChat } from '../api/maxApi';
@@ -14,7 +8,15 @@ import { registerChat } from '../api/maxApi';
 declare global {
   interface Window {
     WebApp?: {
-      initData: { chat_id?: string; user_id?: number };
+      initData: string;
+      initDataUnsafe?: {
+        query_id: string;
+        auth_date: number;
+        hash: string;
+        user?: { id: number; first_name: string; last_name: string; username?: string };
+        chat?: { id: number; type: string };
+        start_param?: string;
+      };
       ready: () => void;
     };
   }
@@ -27,14 +29,14 @@ export default function MaxApp() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (window.WebApp?.initData) {
-      const data = window.WebApp.initData;
-      if (data.chat_id) setChatId(data.chat_id);
-      window.WebApp.ready();
-      setStatus('ready');
-    } else {
-      setStatus('ready');
+    const wa = window.WebApp;
+    if (wa?.initDataUnsafe) {
+      const data = wa.initDataUnsafe;
+      const id = data.chat?.id || data.user?.id;
+      if (id) setChatId(String(id));
+      wa.ready();
     }
+    setStatus('ready');
   }, []);
 
   const handleRegister = async () => {
@@ -62,9 +64,7 @@ export default function MaxApp() {
   return (
     <Box sx={{ maxWidth: 420, mx: 'auto', mt: 6, p: 3 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom align="center">
-          Подключение MAX
-        </Typography>
+        <Typography variant="h5" gutterBottom align="center">Подключение MAX</Typography>
 
         {status === 'done' ? (
           <Box sx={{ textAlign: 'center' }}>
@@ -81,8 +81,7 @@ export default function MaxApp() {
 
             <TextField
               label="Email (логин)"
-              fullWidth
-              size="small"
+              fullWidth size="small"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{ mb: 2 }}
@@ -90,22 +89,18 @@ export default function MaxApp() {
             />
 
             {!chatId && (
-              <>
-                <TextField
-                  label="Chat ID (вручную)"
-                  fullWidth
-                  size="small"
-                  value={chatId}
-                  onChange={(e) => setChatId(e.target.value)}
-                  sx={{ mb: 2 }}
-                  helperText="Введите chat_id вручную или откройте через бота в MAX"
-                />
-              </>
+              <TextField
+                label="Chat ID (вручную)"
+                fullWidth size="small"
+                value={chatId}
+                onChange={(e) => setChatId(e.target.value)}
+                sx={{ mb: 2 }}
+                helperText="Введите chat_id вручную или откройте через бота в MAX"
+              />
             )}
 
             <Button
-              variant="contained"
-              fullWidth
+              variant="contained" fullWidth
               onClick={handleRegister}
               disabled={status === 'loading' || !chatId}
             >
