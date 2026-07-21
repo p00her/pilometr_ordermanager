@@ -65,21 +65,22 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar>
-        <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-          Магазины
-        </Typography>
-        <IconButton onClick={() => setSidebarCollapsed(true)} size="small">
-          <ChevronLeftIcon />
-        </IconButton>
-      </Toolbar>
-      {sidebarCollapsed && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-          <IconButton onClick={() => setSidebarCollapsed(false)} size="small">
+      <Box sx={{ display: 'flex', alignItems: 'center', p: '8px 16px', gap: 1 }}>
+        {sidebarCollapsed ? (
+          <IconButton onClick={() => setSidebarCollapsed(false)} sx={{ color: 'text.secondary' }}>
             <ChevronRightIcon />
           </IconButton>
-        </Box>
-      )}
+        ) : (
+          <>
+            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+              Магазины
+            </Typography>
+            <IconButton onClick={() => setSidebarCollapsed(true)} sx={{ color: 'text.secondary' }}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </>
+        )}
+      </Box>
       <List>
         {navItems.map((item) => (
           <ListItemButton
