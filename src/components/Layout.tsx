@@ -65,14 +65,22 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar sx={{ px: sidebarCollapsed ? 0 : 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: { xs: 56, sm: 64 },
+          px: sidebarCollapsed ? 0 : 2,
+        }}
+      >
         {sidebarCollapsed ? (
           <IconButton onClick={() => setSidebarCollapsed(false)}>
             <ChevronRightIcon />
           </IconButton>
         ) : (
           <>
-            <Typography variant="h6" noWrap sx={{ mr: 'auto' }}>
+            <Typography variant="h6" noWrap>
               Магазины
             </Typography>
             <IconButton onClick={() => setSidebarCollapsed(true)}>
@@ -80,7 +88,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             </IconButton>
           </>
         )}
-      </Toolbar>
+      </Box>
       <List>
         {navItems.map((item) => (
           <ListItemButton
