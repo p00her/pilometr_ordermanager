@@ -20,6 +20,7 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  styled,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -49,6 +50,16 @@ const modeIcon: Record<string, typeof LightModeIcon> = {
   dark: DarkModeIcon,
   system: SettingsBrightnessIcon,
 };
+
+const StyledDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'collapsed' })<{ collapsed: boolean }>(
+  ({ collapsed }) => ({
+    '& .MuiDrawer-paper': {
+      width: collapsed ? 64 : 260,
+      transition: 'width 0.2s ease',
+      overflowX: 'hidden',
+    },
+  }),
+);
 
 export default function Layout({ userName, onLogout }: { userName: string; onLogout: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -184,26 +195,18 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
             ModalProps={{ keepMounted: true }}
-            slotProps={{ paper: { sx: { width: 260 } } }}
+            PaperProps={{ sx: { width: 260 } }}
           >
             {drawer}
           </Drawer>
         ) : (
-          <Drawer
+          <StyledDrawer
             variant="permanent"
             open
-            slotProps={{
-              paper: {
-                sx: {
-                  width: drawerWidth,
-                  transition: 'width 0.2s ease',
-                  overflowX: 'hidden',
-                },
-              },
-            }}
+            collapsed={sidebarCollapsed}
           >
             {drawer}
-          </Drawer>
+          </StyledDrawer>
         )}
       </Box>
 
