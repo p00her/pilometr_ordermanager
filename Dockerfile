@@ -4,5 +4,5 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
-EXPOSE 80
+EXPOSE 8088
 CMD ["node", "server.js"]

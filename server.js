@@ -6,7 +6,7 @@ const initSqlJs = require('sql.js');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'app.db');
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 8088;
 
 if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
