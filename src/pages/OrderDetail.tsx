@@ -119,7 +119,7 @@ export default function OrderDetail() {
         setItems((prev) => {
           let changed = false;
           const merged = prev.map((localItem) => {
-            const data = cached.get(localItem.id);
+            const data = localItem.id != null ? cached.get(localItem.id) : undefined;
             if (!data) return localItem;
             changed = true;
             return { ...localItem, ...data };
