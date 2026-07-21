@@ -39,7 +39,6 @@ function maxSendMessage($token, $userId, $text) {
 function maxDefaultSettings() {
 	return array(
 		'new_order' => true,
-		'order_ready' => true,
 		'order_cancelled' => false,
 		'delivery_ids' => array(),
 	);
@@ -108,6 +107,21 @@ function maxBuildOrderText($order, $d_methods) {
 	$text .= "\n📞 Телефон: " . $mobtelefon;
 	if ($email && $email !== '—') $text .= "\n📧 E-mail: " . $email;
 	if ($comment && $comment !== '—') $text .= "\n💬 Комментарий: " . $comment;
+
+	$text .= "\n\n<b>Товары:</b>";
+	$objectsCollection = umiObjectsCollection::getInstance();
+	$orderItems = $order->order_items;
+	if (!empty($orderItems) && is_array($orderItems)) {
+		foreach ($orderItems as $oi) {
+			$item = $objectsCollection->getObject($oi);
+			if ($item) {
+				$itemName = $item->name;
+				$itemAmount = $item->item_amount ? intval($item->item_amount) : 1;
+				$text .= "\n• " . $itemName . ' — ' . $itemAmount . ' шт.';
+			}
+		}
+	}
+
 	$text .= "\n\nОткрыть заказ: https://orders.pilometr.ru/orders/" . $order->id;
 	return $text;
 }
@@ -305,10 +319,8 @@ case 'auto_notify':
 
 		// определяем тип события
 		$eventType = null;
-		if ($statusId == 97 || $statusId == 99) {
+		if ($statusId == 97 || $statusId == 99 || $statusId == 100 || $statusId == 101) {
 			$eventType = 'new_order';
-		} elseif ($statusId == 100 || $statusId == 101) {
-			$eventType = 'order_ready';
 		} elseif ($statusId == 95 || $statusId == 96) {
 			$eventType = 'order_cancelled';
 		}

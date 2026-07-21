@@ -3,11 +3,10 @@ import axios from 'axios';
 const API_URL = '/endpoint.php';
 const API_KEY = '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f';
 
-export type MaxNotifyType = 'new_order' | 'order_ready' | 'order_cancelled';
+export type MaxNotifyType = 'new_order' | 'order_cancelled';
 
 export interface MaxNotificationSettings {
   new_order: boolean;
-  order_ready: boolean;
   order_cancelled: boolean;
   delivery_ids: number[];
 }

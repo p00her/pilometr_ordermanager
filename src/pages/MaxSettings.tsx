@@ -16,7 +16,7 @@ import {
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
 import { getMaxSettings, updateMaxSettings, type MaxNotificationSettings } from '../api/maxApi';
 
-type NotifyKey = 'new_order' | 'order_ready' | 'order_cancelled';
+type NotifyKey = 'new_order' | 'order_cancelled';
 
 interface NotifySetting {
   key: NotifyKey;
@@ -26,14 +26,12 @@ interface NotifySetting {
 
 const NOTIFY_ITEMS: NotifySetting[] = [
   { key: 'new_order', label: 'Новый заказ', desc: 'Автоматически при появлении нового заказа в системе' },
-  { key: 'order_ready', label: 'Заказ готов к отгрузке', desc: 'Когда статус заказа меняется на «Готов»' },
   { key: 'order_cancelled', label: 'Заказ отменён', desc: 'Когда заказ получает статус «Отменён»' },
 ];
 
 export default function MaxSettings() {
   const [settings, setSettings] = useState<MaxNotificationSettings>({
     new_order: true,
-    order_ready: true,
     order_cancelled: false,
     delivery_ids: [],
   });
