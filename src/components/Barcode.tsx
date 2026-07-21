@@ -14,7 +14,7 @@ export default function Barcode({ value, width = 1.2, height = 36 }: Props) {
     if (ref.current && value) {
       try {
         JsBarcode(ref.current, value, {
-          format: 'CODE128',
+          format: 'EAN13',
           width,
           height,
           displayValue: true,
