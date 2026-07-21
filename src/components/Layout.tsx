@@ -22,6 +22,8 @@ import {
   useTheme,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
@@ -51,42 +53,63 @@ const modeIcon: Record<string, typeof LightModeIcon> = {
 export default function Layout({ userName, onLogout }: { userName: string; onLogout: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [maxDialogOpen, setMaxDialogOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { mode, setMode } = useThemeMode();
+  const drawerWidth = sidebarCollapsed ? 64 : 260;
 
   const Icon = modeIcon[mode];
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar>
-        <Typography variant="h6" noWrap>
-          Магазины
-        </Typography>
+      <Toolbar sx={{ justifyContent: 'center', px: sidebarCollapsed ? 0 : 2 }}>
+        {sidebarCollapsed ? (
+          <IconButton onClick={() => setSidebarCollapsed(false)}>
+            <ChevronRightIcon />
+          </IconButton>
+        ) : (
+          <>
+            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+              Магазины
+            </Typography>
+            <IconButton size="small" onClick={() => setSidebarCollapsed(true)}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </>
+        )}
       </Toolbar>
       <List>
         {navItems.map((item) => (
           <ListItemButton
             key={item.path}
             selected={location.pathname === item.path}
+            sx={{ justifyContent: sidebarCollapsed ? 'center' : undefined, px: sidebarCollapsed ? 1 : 2 }}
             onClick={() => {
               navigate(item.path);
               if (isMobile) setMobileOpen(false);
             }}
           >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemIcon sx={{ minWidth: sidebarCollapsed ? 0 : 56 }}>
+              {item.icon}
+            </ListItemIcon>
+            {!sidebarCollapsed && <ListItemText primary={item.label} />}
           </ListItemButton>
         ))}
       </List>
       <Box sx={{ flexGrow: 1 }} />
       <Divider />
       <List>
-        <ListItemButton onClick={() => setMaxDialogOpen(true)}>
-          <ListItemIcon><SendToMobileIcon /></ListItemIcon>
-          <ListItemText primary="MAX" secondary="Уведомления" />
+        <ListItemButton
+          onClick={() => setMaxDialogOpen(true)}
+          sx={{ justifyContent: sidebarCollapsed ? 'center' : undefined, px: sidebarCollapsed ? 1 : 2 }}
+        >
+          <ListItemIcon sx={{ minWidth: sidebarCollapsed ? 0 : 56 }}>
+            <SendToMobileIcon />
+          </ListItemIcon>
+          {!sidebarCollapsed && <ListItemText primary="MAX" secondary="Уведомления" />}
         </ListItemButton>
       </List>
     </Box>
@@ -149,7 +172,11 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
       <Box
         component="nav"
-        sx={{ width: { md: 260 }, flexShrink: { md: 0 } }}
+        sx={{
+          width: { md: drawerWidth },
+          flexShrink: { md: 0 },
+          transition: 'width 0.2s ease',
+        }}
       >
         {isMobile ? (
           <Drawer
@@ -157,11 +184,22 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
             ModalProps={{ keepMounted: true }}
+            sx={{ '& .MuiDrawer-paper': { width: 260 } }}
           >
             {drawer}
           </Drawer>
         ) : (
-          <Drawer variant="permanent" open>
+          <Drawer
+            variant="permanent"
+            open
+            sx={{
+              '& .MuiDrawer-paper': {
+                width: drawerWidth,
+                transition: 'width 0.2s ease',
+                overflowX: 'hidden',
+              },
+            }}
+          >
             {drawer}
           </Drawer>
         )}
