@@ -81,6 +81,7 @@ export default function OrdersList() {
 
   const [filters, setFilters] = useState({
     number: '',
+    poluchatel: '',
     phone: '+7',
     email: '',
     dateFrom: '',
@@ -192,6 +193,7 @@ export default function OrdersList() {
   const processedOrders = useMemo(() => {
     const filtered = orders.filter((o) => {
       if (filters.number && !String(o.number).includes(filters.number)) return false;
+      if (filters.poluchatel && !(o.poluchatel ?? '').toLowerCase().includes(filters.poluchatel.toLowerCase())) return false;
       if (filters.phone) {
         const phoneDigits = filters.phone.replace(/\D/g, '');
         if (phoneDigits.length > 1 && !(o.mobtelefon ?? '').replace(/\D/g, '').includes(phoneDigits)) return false;
@@ -276,6 +278,13 @@ export default function OrdersList() {
             value={filters.number}
             onChange={(e) => setFilters((f) => ({ ...f, number: e.target.value }))}
             sx={{ width: 100 }}
+          />
+          <TextField
+            label="Получатель"
+            size="small"
+            value={filters.poluchatel}
+            onChange={(e) => setFilters((f) => ({ ...f, poluchatel: e.target.value }))}
+            sx={{ width: 160 }}
           />
           <TextField
             label="Телефон"
