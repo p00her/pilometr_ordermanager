@@ -29,5 +29,5 @@ export default function Barcode({ value, width = 1.2, height = 36 }: Props) {
 
   if (!value) return <span>—</span>;
 
-  return <svg ref={ref} style={{ display: 'block', maxWidth: 160, letterSpacing: 1 }} />;
+  return <svg ref={ref} style={{ display: 'block', maxWidth: 160, letterSpacing: 2 }} />;
 }
