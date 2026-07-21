@@ -38,12 +38,11 @@ async function apiPost<T>(
   jsonBody: Record<string, unknown>,
   queryParams: Record<string, unknown> = {}
 ): Promise<T> {
-  const parts = buildPhpQuery(queryParams);
+  const allParams = { ...jsonBody, ...queryParams };
+  const parts = buildPhpQuery(allParams);
   const qs = parts.join('&');
   const url = qs ? `${endpoint}?${qs}` : endpoint;
-  const res = await axios.post<T>(url, jsonBody, {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const res = await axios.get<T>(url);
   return res.data;
 }
 
