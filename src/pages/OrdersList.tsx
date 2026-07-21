@@ -69,6 +69,7 @@ export default function OrdersList() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [error, setError] = useState('');
   const [lastSyncLabel, setLastSyncLabel] = useState('');
   const [refData, setRefData] = useState<ReferenceData | null>(null);
@@ -166,7 +167,9 @@ export default function OrdersList() {
         const now = new Date().toISOString();
         await setMeta('lastSyncTime', now);
         setLastSyncLabel(formatDate(now));
+        setInitialLoadDone(true);
       }).catch(() => {
+        setInitialLoadDone(true);
         if (!local.length) setError('Ошибка загрузки');
       });
     })();
@@ -479,7 +482,7 @@ export default function OrdersList() {
                 {pageOrders.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} align="center">
-                      Нет заказов
+                      {initialLoadDone ? 'Нет заказов' : <CircularProgress size={24} />}
                     </TableCell>
                   </TableRow>
                 )}
