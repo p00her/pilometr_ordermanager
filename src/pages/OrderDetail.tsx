@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -133,15 +133,19 @@ export default function OrderDetail() {
 
   useEffect(() => {
     getMeta('order_note_' + orderId).then((val) => {
-      setNote(val ?? '');
+      const text = val ?? '';
+      setNote(text);
+      savedNoteRef.current = text;
     });
   }, [orderId]);
 
   const NOTE_DELAY = 5;
+  const savedNoteRef = useRef('');
 
   const saveNote = useCallback(async (text: string) => {
     setNoteSaving(true);
     await setMeta('order_note_' + orderId, text);
+    savedNoteRef.current = text;
     setNoteSaving(false);
     setNoteTimer(0);
   }, [orderId]);
@@ -616,7 +620,7 @@ export default function OrderDetail() {
             variant="contained"
             size="small"
             onClick={() => saveNote(note)}
-            disabled={noteSaving}
+            disabled={noteSaving || note === savedNoteRef.current}
           >
             {noteSaving ? 'Сохранение...' : 'Сохранить заметку'}
           </Button>
