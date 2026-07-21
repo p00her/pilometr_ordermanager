@@ -652,7 +652,7 @@ export default function OrderDetail() {
           <Button
             variant="contained"
             size="small"
-            onClick={() => saveNote(note)}
+            onClick={() => saveNoteLocally(note)}
             disabled={noteSaving || note === savedNoteRef.current}
           >
             {noteSaving ? 'Сохранение...' : 'Сохранить заметку'}
