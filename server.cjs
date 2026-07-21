@@ -66,6 +66,10 @@ app.use('/endpoint.php', (req, res) => {
     if (body) {
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       options.headers['Content-Length'] = Buffer.byteLength(body);
+    } else {
+      delete options.headers['content-length'];
+      delete options.headers['content-type'];
+      delete options.headers['transfer-encoding'];
     }
     const proxyReq = https.request(options, (proxyRes) => {
       res.writeHead(proxyRes.statusCode, proxyRes.headers);
@@ -75,7 +79,7 @@ app.use('/endpoint.php', (req, res) => {
       res.status(500).send('Proxy error: ' + err.message);
     });
     if (body) proxyReq.end(body);
-    else req.pipe(proxyReq);
+    else proxyReq.end();
   };
 
   if (req.method === 'POST') {
