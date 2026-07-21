@@ -41,7 +41,7 @@ import {
   API_URL,
 } from '../api/ordersApi';
 import { sendMaxNotification } from '../api/maxApi';
-import { getOrderById, getMeta, setMeta } from '../db/db';
+import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
 import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
 
 export default function OrderDetail() {
@@ -113,6 +113,22 @@ export default function OrderDetail() {
     if (items.length === 0) return;
     const itemIds = items.map((it) => it.id).filter((id): id is number => id != null);
     if (itemIds.length === 0) return;
+
+    getCachedStorageItems(itemIds).then((cached) => {
+      if (cached.size > 0) {
+        setItems((prev) => {
+          let changed = false;
+          const merged = prev.map((localItem) => {
+            const data = cached.get(localItem.id);
+            if (!data) return localItem;
+            changed = true;
+            return { ...localItem, ...data };
+          });
+          return changed ? merged : prev;
+        });
+      }
+    });
+
     setLoadingStorage(true);
     getItemStorage(API_URL, itemIds).then((storageItems) => {
       setItems((prev) => {
@@ -127,6 +143,7 @@ export default function OrderDetail() {
         });
         return changed ? merged : prev;
       });
+      setCachedStorageItems(storageItems.filter((s) => s.volhov_storage !== undefined));
       setLoadingStorage(false);
     }).catch(() => setLoadingStorage(false));
   }, [orderId, items.length > 0]);

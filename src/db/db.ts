@@ -102,3 +102,43 @@ export async function replaceOrders(apiOrders: Order[]): Promise<Order[]> {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+const STORAGE_CACHE_TTL = 300_000;
+
+export async function getCachedStorageItems(itemIds: number[]): Promise<Map<number, Record<string, number>>> {
+  const db = await openDB();
+  const tx = db.transaction(META_STORE, 'readonly');
+  const store = tx.objectStore(META_STORE);
+  const now = Date.now();
+  const result = new Map<number, Record<string, number>>();
+  for (const id of itemIds) {
+    const req = store.get('storage_' + id);
+    const entry = await new Promise<{ key: string; value: { data: Record<string, number>; cachedAt: number } } | undefined>(
+      (resolve, reject) => {
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      }
+    );
+    if (entry && now - entry.value.cachedAt < STORAGE_CACHE_TTL) {
+      result.set(id, entry.value.data);
+    }
+  }
+  return result;
+}
+
+export async function setCachedStorageItems(
+  items: { id: number; [key: string]: unknown }[]
+): Promise<void> {
+  const db = await openDB();
+  const tx = db.transaction(META_STORE, 'readwrite');
+  const store = tx.objectStore(META_STORE);
+  const now = Date.now();
+  for (const item of items) {
+    const { id, ...data } = item;
+    store.put({ key: 'storage_' + id, value: { data, cachedAt: now } });
+  }
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
