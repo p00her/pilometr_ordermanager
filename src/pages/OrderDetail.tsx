@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -67,6 +67,7 @@ export default function OrderDetail() {
   const [maxSent, setMaxSent] = useState(false);
   const [note, setNote] = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
+  const [noteTimer, setNoteTimer] = useState(0);
 
   const storageKeys = useMemo(() => {
     const did = Number(order?.delivery_id);
@@ -136,13 +137,28 @@ export default function OrderDetail() {
     });
   }, [orderId]);
 
-  useEffect(() => {
+  const NOTE_DELAY = 5;
+
+  const saveNote = useCallback(async (text: string) => {
     setNoteSaving(true);
-    const timer = setTimeout(() => {
-      setMeta('order_note_' + orderId, note).finally(() => setNoteSaving(false));
-    }, 500);
+    await setMeta('order_note_' + orderId, text);
+    setNoteSaving(false);
+    setNoteTimer(0);
+  }, [orderId]);
+
+  useEffect(() => {
+    if (noteTimer > 0) {
+      const tick = setTimeout(() => setNoteTimer((t) => t - 1), 1000);
+      return () => clearTimeout(tick);
+    }
+  }, [noteTimer]);
+
+  useEffect(() => {
+    if (note === '') return;
+    setNoteTimer(NOTE_DELAY);
+    const timer = setTimeout(() => saveNote(note), NOTE_DELAY * 1000);
     return () => clearTimeout(timer);
-  }, [note, orderId]);
+  }, [note, saveNote]);
 
   const handleFieldChange = (field: string, value: unknown) => {
     setEditedFields((prev) => ({ ...prev, [field]: value }));
@@ -358,18 +374,6 @@ export default function OrderDetail() {
                 rows={2}
                 defaultValue={order?.comment}
                 onChange={(e) => handleFieldChange('comment', e.target.value)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Заметки для продавцов"
-                fullWidth
-                size="small"
-                multiline
-                rows={3}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                helperText={noteSaving ? 'Сохранение...' : ''}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -593,6 +597,40 @@ export default function OrderDetail() {
             </TableBody>
           </Table>
         </TableContainer>
+      </Paper>
+
+      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Заметки. Не видны покупателям
+        </Typography>
+        <TextField
+          fullWidth
+          size="small"
+          multiline
+          rows={3}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => saveNote(note)}
+            disabled={noteSaving}
+          >
+            {noteSaving ? 'Сохранение...' : 'Сохранить заметку'}
+          </Button>
+          {noteTimer > 0 && (
+            <Typography variant="caption" color="text.secondary">
+              Автосохранение через {noteTimer}с
+            </Typography>
+          )}
+          {noteSaving && noteTimer === 0 && (
+            <Typography variant="caption" color="text.secondary">
+              Сохранено
+            </Typography>
+          )}
+        </Box>
       </Paper>
 
       <Dialog
