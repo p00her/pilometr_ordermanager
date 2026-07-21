@@ -33,6 +33,7 @@ import SendToMobileIcon from '@mui/icons-material/SendToMobile';
 import Barcode from '../components/Barcode';
 import {
   getItemStorage,
+  getOrderDetail,
   updateOrder,
   removeOrderItem,
   setItemAmount,
@@ -90,11 +91,20 @@ export default function OrderDetail() {
         if (local?.items) {
           setOrder(local as unknown as OrderDetail);
           setItems(local.items ?? []);
+          setLoading(false);
+          return;
+        }
+      } catch {}
+      try {
+        const detail = await getOrderDetail(API_URL, orderId);
+        if (detail?.items) {
+          setOrder(detail);
+          setItems(detail.items ?? []);
         } else {
-          setError('Заказ не найден в локальном кеше');
+          setError('Заказ не найден');
         }
       } catch {
-        setError('Ошибка загрузки заказа из локального кеша');
+        setError('Ошибка загрузки заказа');
       } finally {
         setLoading(false);
       }
