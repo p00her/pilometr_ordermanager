@@ -41,10 +41,19 @@ async function initDb() {
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 app.use('/endpoint.php', createProxyMiddleware({
   target: 'https://pilometr.ru',
   changeOrigin: true,
   headers: { Host: 'pilometr.ru' },
+  on: {
+    proxyReq: (proxyReq, req) => {
+      const forwarded = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+      proxyReq.setHeader('X-Real-IP', forwarded);
+      proxyReq.setHeader('X-Forwarded-Proto', 'https');
+    },
+  },
 }));
 
 app.get('/api/notes/:orderId', (req, res) => {
