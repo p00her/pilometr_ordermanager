@@ -475,7 +475,7 @@ export default function OrdersList() {
                             sx={{
                               whiteSpace: 'normal',
                               height: 'auto',
-                              '& .MuiChip-label': { whiteSpace: 'normal', overflow: 'visible', display: 'block' },
+                              '& .MuiChip-label': { whiteSpace: 'normal', overflow: 'visible', display: 'block', textAlign: 'center' },
                             }}
                           />
                         );
