@@ -44,6 +44,7 @@ import {
 } from '../api/ordersApi';
 import { sendMaxNotification } from '../api/maxApi';
 import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
+import { getNote as apiGetNote, saveNote as apiSaveNote } from '../api/notesApi';
 import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
 
 export default function OrderDetail() {
@@ -160,8 +161,7 @@ export default function OrderDetail() {
   }, [orderId, items.length > 0]);
 
   useEffect(() => {
-    getMeta('order_note_' + orderId).then((val) => {
-      const text = val ?? '';
+    apiGetNote(orderId).then((text) => {
       setNote(text);
       savedNoteRef.current = text;
       noteLoadedRef.current = true;
@@ -172,9 +172,9 @@ export default function OrderDetail() {
   const savedNoteRef = useRef('');
   const noteLoadedRef = useRef(false);
 
-  const saveNote = useCallback(async (text: string) => {
+  const saveNoteLocally = useCallback(async (text: string) => {
     setNoteSaving(true);
-    await setMeta('order_note_' + orderId, text);
+    await apiSaveNote(orderId, text);
     savedNoteRef.current = text;
     setNoteSaving(false);
     setNoteTimer(0);
@@ -191,9 +191,9 @@ export default function OrderDetail() {
     if (!noteLoadedRef.current) return;
     if (note === savedNoteRef.current) return;
     setNoteTimer(NOTE_DELAY);
-    const timer = setTimeout(() => saveNote(note), NOTE_DELAY * 1000);
+    const timer = setTimeout(() => saveNoteLocally(note), NOTE_DELAY * 1000);
     return () => clearTimeout(timer);
-  }, [note, saveNote]);
+  }, [note, saveNoteLocally]);
 
   const handleFieldChange = (field: string, value: unknown) => {
     setEditedFields((prev) => ({ ...prev, [field]: value }));

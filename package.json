@@ -16,10 +16,13 @@
     "@mui/material": "^9.2.0",
     "@mui/x-data-grid": "^9.10.0",
     "axios": "^1.18.1",
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^4.2.0",
     "jsbarcode": "^3.12.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
+    "sql.js": "^1.14.1",
     "ssh2": "^1.17.0"
   },
   "devDependencies": {
