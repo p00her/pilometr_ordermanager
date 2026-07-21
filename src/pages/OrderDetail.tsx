@@ -561,7 +561,10 @@ export default function OrderDetail() {
                           size="small"
                           value={item.amount}
                           sx={{ width: { xs: 55, sm: 70 } }}
-                          onChange={(e) => handleAmountChange(idx, e)}
+                          slotProps={{ htmlInput: { min: 1 } }}
+                          onChange={(e) =>
+                            handleAmountChange(idx, item.id, Number(e.target.value))
+                          }
                         />
                       </span>
                       <span className="print-only">{item.amount}</span>
