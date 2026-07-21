@@ -40,8 +40,7 @@ async function initDb() {
 const app = express();
 
 app.use('/endpoint.php', (req, res) => {
-  const query = req.url.replace(/^\//, '');
-  const path = '/endpoint.php' + (query ? '?' + query : '');
+  const path = req.originalUrl;
   const headers = { ...req.headers, Host: 'pilometr.ru' };
   headers['X-Real-IP'] = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
   headers['X-Forwarded-Proto'] = 'https';
