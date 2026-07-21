@@ -1,12 +1,14 @@
 const express = require('express');
 const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const https = require('https');
 const path = require('path');
 const initSqlJs = require('sql.js');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'app.db');
 const PORT = process.env.PORT || 8088;
+const CERT_DIR = '/etc/letsencrypt';
 
 if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
@@ -109,5 +111,14 @@ app.get('*path', (_req, res) => {
 
 (async () => {
   await initDb();
-  app.listen(PORT, () => console.log('Server started on port ' + PORT));
+  const certPath = path.join(CERT_DIR, 'live', 'npm-1');
+  const hasCerts = existsSync(path.join(certPath, 'fullchain.pem'));
+  if (hasCerts) {
+    https.createServer({
+      key: readFileSync(path.join(certPath, 'privkey.pem')),
+      cert: readFileSync(path.join(certPath, 'fullchain.pem')),
+    }, app).listen(PORT, () => console.log('HTTPS server on port ' + PORT));
+  } else {
+    app.listen(PORT, () => console.log('HTTP server on port ' + PORT));
+  }
 })();
