@@ -141,36 +141,34 @@ export default function OrdersList() {
 
   useEffect(() => {
     (async () => {
-      const savedField = await getMeta('sortField');
-      const savedDir = await getMeta('sortDir');
+      const [savedField, savedDir, ls] = await Promise.all([
+        getMeta('sortField'),
+        getMeta('sortDir'),
+        getMeta('lastSyncTime'),
+      ]);
       if (savedField === 'number' || savedField === 'order_date') setSortField(savedField);
       if (savedDir === 'asc' || savedDir === 'desc') setSortDir(savedDir);
+      if (ls) setLastSyncLabel(formatDate(ls));
 
-      setLoading(true);
-      try {
-        const ls = await getMeta('lastSyncTime');
-        if (ls) setLastSyncLabel(formatDate(ls));
+      const local = await getAllOrders();
+      if (local.length > 0) {
+        setOrders(local);
+      }
+      setLoading(false);
 
-        const local = await getAllOrders();
-        if (local.length > 0) {
-          setOrders(local);
-          setLoading(false);
-        }
-
-        const ref = await getReferenceData(API_URL);
+      Promise.all([
+        getReferenceData(API_URL),
+        getOrdersListSince(API_URL, '', 0),
+      ]).then(async ([ref, data]) => {
         setRefData(ref);
-
-        const data = await getOrdersListSince(API_URL, '', 0);
         const replaced = await replaceOrders(data.data ?? []);
         setOrders(replaced);
         const now = new Date().toISOString();
         await setMeta('lastSyncTime', now);
         setLastSyncLabel(formatDate(now));
-      } catch {
-        setError('Ошибка загрузки');
-      } finally {
-        setLoading(false);
-      }
+      }).catch((e) => {
+        if (!local.length) setError('Ошибка загрузки');
+      });
     })();
   }, []);
 
