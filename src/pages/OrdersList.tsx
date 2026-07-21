@@ -166,7 +166,7 @@ export default function OrdersList() {
         const now = new Date().toISOString();
         await setMeta('lastSyncTime', now);
         setLastSyncLabel(formatDate(now));
-      }).catch((e) => {
+      }).catch(() => {
         if (!local.length) setError('Ошибка загрузки');
       });
     })();
