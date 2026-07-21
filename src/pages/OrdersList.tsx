@@ -422,8 +422,8 @@ export default function OrdersList() {
                   <TableCell>E-mail</TableCell>
                   <TableCell>Сумма</TableCell>
                   <TableCell>Статус</TableCell>
-                  <TableCell>Способ оплаты</TableCell>
                   <TableCell>Способ получения</TableCell>
+                  <TableCell>Способ оплаты</TableCell>
                   <TableCell>Статус оплаты</TableCell>
                 </TableRow>
               </TableHead>
@@ -462,13 +462,13 @@ export default function OrdersList() {
                       })()}
                     </TableCell>
                     <TableCell>
-                      {refData?.p_methods[order.payment_id ?? -1] ??
-                        order.payment_method ??
+                      {refData?.d_methods[order.delivery_id ?? -1] ??
+                        order.delivery_method ??
                         '—'}
                     </TableCell>
                     <TableCell>
-                      {refData?.d_methods[order.delivery_id ?? -1] ??
-                        order.delivery_method ??
+                      {refData?.p_methods[order.payment_id ?? -1] ??
+                        order.payment_method ??
                         '—'}
                     </TableCell>
                     <TableCell>
