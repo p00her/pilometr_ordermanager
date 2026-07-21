@@ -189,7 +189,16 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
           <Typography variant="subtitle2" gutterBottom>Как подключить:</Typography>
           <Box component="ol" sx={{ pl: 2, '& li': { mb: 1 } }}>
             <li>Установите приложение MAX на телефон</li>
-            <li>Найдите бота <strong>@id071305521406_1_bot</strong></li>
+             <li>
+               Найдите бота <strong>@id071305521406_1_bot</strong>
+               <Box sx={{ textAlign: 'center', my: 1.5 }}>
+                 <img
+                   src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://max.ru/id071305521406_1_bot"
+                   alt="QR: @id071305521406_1_bot"
+                   style={{ borderRadius: 8, display: 'block', margin: '0 auto' }}
+                 />
+               </Box>
+             </li>
             <li>Откройте мини-приложение бота</li>
             <li>Введите ваш email (логин) и нажмите «Подключить»</li>
           </Box>
