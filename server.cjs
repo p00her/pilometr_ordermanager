@@ -43,11 +43,10 @@ app.use(express.json({ limit: '10mb' }));
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-app.use('/endpoint.php', createProxyMiddleware({
+app.use(createProxyMiddleware('/endpoint.php', {
   target: 'https://pilometr.ru',
   changeOrigin: true,
   headers: { Host: 'pilometr.ru' },
-  prependPath: true,
   on: {
     proxyReq: (proxyReq, req) => {
       const forwarded = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
