@@ -1,6 +1,6 @@
 const express = require('express');
 const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const http = require('http');
 const https = require('https');
 const path = require('path');
 const initSqlJs = require('sql.js');
@@ -41,21 +41,36 @@ async function initDb() {
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-app.use(createProxyMiddleware({
-  target: 'https://pilometr.ru',
-  pathFilter: '/endpoint.php',
-  changeOrigin: true,
-  headers: { Host: 'pilometr.ru' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      const forwarded = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
-      proxyReq.setHeader('X-Real-IP', forwarded);
-      proxyReq.setHeader('X-Forwarded-Proto', 'https');
+app.use('/endpoint.php', (req, res) => {
+  const query = req.url.replace(/^\//, '');
+  const options = {
+    hostname: 'pilometr.ru',
+    port: 443,
+    path: '/endpoint.php' + (query ? '?' + query : ''),
+    method: req.method,
+    headers: {
+      ...req.headers,
+      Host: 'pilometr.ru',
+      'X-Real-IP': req.headers['x-forwarded-for'] || req.socket.remoteAddress || '',
+      'X-Forwarded-Proto': 'https',
     },
-  },
-}));
+    rejectUnauthorized: false,
+  };
+  delete options.headers['sec-fetch-site'];
+  delete options.headers['sec-fetch-mode'];
+  delete options.headers['sec-fetch-dest'];
+  delete options.headers['sec-ch-ua'];
+  delete options.headers['sec-ch-ua-mobile'];
+  delete options.headers['sec-ch-ua-platform'];
+  const proxyReq = https.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+  proxyReq.on('error', (err) => {
+    res.status(500).send('Proxy error: ' + err.message);
+  });
+  req.pipe(proxyReq);
+});
 
 app.get('/api/notes/:orderId', (req, res) => {
   const stmt = db.prepare('SELECT note, updated_at FROM notes WHERE order_id = ?');
