@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
 import { ThemeContextProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -25,7 +26,13 @@ export default function App() {
       });
   }, []);
 
-  if (authed === null) return null;
+  if (authed === null) return (
+    <ThemeContextProvider>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    </ThemeContextProvider>
+  );
 
   if (!authed) {
     return (
