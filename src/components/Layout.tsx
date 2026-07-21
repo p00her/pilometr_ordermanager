@@ -65,22 +65,11 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', p: '8px 16px', gap: 1 }}>
-        {sidebarCollapsed ? (
-          <IconButton onClick={() => setSidebarCollapsed(false)} sx={{ color: 'text.secondary' }}>
-            <ChevronRightIcon />
-          </IconButton>
-        ) : (
-          <>
-            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-              Магазины
-            </Typography>
-            <IconButton onClick={() => setSidebarCollapsed(true)} sx={{ color: 'text.secondary' }}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </>
-        )}
-      </Box>
+      <Toolbar>
+        <Typography variant="h6" noWrap>
+          Магазины
+        </Typography>
+      </Toolbar>
       <List>
         {navItems.map((item) => (
           <ListItemButton
@@ -112,6 +101,12 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
           {!sidebarCollapsed && <ListItemText primary="MAX" secondary="Уведомления" />}
         </ListItemButton>
       </List>
+      <Divider />
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+        <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: 'text.secondary' }}>
+          {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+        </IconButton>
+      </Box>
     </Box>
   );
 
