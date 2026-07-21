@@ -136,11 +136,13 @@ export default function OrderDetail() {
       const text = val ?? '';
       setNote(text);
       savedNoteRef.current = text;
+      noteLoadedRef.current = true;
     });
   }, [orderId]);
 
   const NOTE_DELAY = 5;
   const savedNoteRef = useRef('');
+  const noteLoadedRef = useRef(false);
 
   const saveNote = useCallback(async (text: string) => {
     setNoteSaving(true);
@@ -158,7 +160,8 @@ export default function OrderDetail() {
   }, [noteTimer]);
 
   useEffect(() => {
-    if (note === '') return;
+    if (!noteLoadedRef.current) return;
+    if (note === savedNoteRef.current) return;
     setNoteTimer(NOTE_DELAY);
     const timer = setTimeout(() => saveNote(note), NOTE_DELAY * 1000);
     return () => clearTimeout(timer);
