@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
@@ -65,10 +66,20 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar>
-        <Typography variant="h6" noWrap>
+        <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
           Магазины
         </Typography>
+        <IconButton onClick={() => setSidebarCollapsed(true)} size="small">
+          <ChevronLeftIcon />
+        </IconButton>
       </Toolbar>
+      {sidebarCollapsed && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <IconButton onClick={() => setSidebarCollapsed(false)} size="small">
+            <ChevronRightIcon />
+          </IconButton>
+        </Box>
+      )}
       <List>
         {navItems.map((item) => (
           <ListItemButton
@@ -136,15 +147,6 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
           <Typography variant="body2" sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}>
             {userName}
           </Typography>
-
-          <IconButton
-            color="inherit"
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            title={sidebarCollapsed ? 'Развернуть панель' : 'Свернуть панель'}
-            sx={{ display: { xs: 'none', md: 'inline-flex' } }}
-          >
-            <ChevronLeftIcon sx={{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-          </IconButton>
 
           <IconButton
             color="inherit"
