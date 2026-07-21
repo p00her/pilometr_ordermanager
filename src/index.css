@@ -1,0 +1,50 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.no-print {
+  display: block;
+}
+.print-only {
+  display: none;
+}
+
+@media print {
+  nav, header, .MuiDrawer-root, .MuiAppBar-root {
+    display: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  main {
+    margin-top: 0 !important;
+    padding: 0 !important;
+  }
+  .hide-print-col {
+    display: none !important;
+  }
+  .MuiChip-root {
+    display: inline-flex !important;
+  }
+  table, th, td {
+    border-color: #000 !important;
+  }
+  @page {
+    margin: 10mm;
+  }
+}

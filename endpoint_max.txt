@@ -1,0 +1,353 @@
+Добавить в начало endpoint.php, после определения констант (например, после API_KEY):
+
+// ====== MAX УВЕДОМЛЕНИЯ ======
+define('MAX_BOT_TOKEN', '');
+define('MAX_CHATS_FILE', __DIR__ . '/max_chats.json');
+define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
+
+// ====== КОНЕЦ MAX ======
+
+Затем в блоке publicModes добавить 'register_chat':
+	$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings'];
+
+После auth-режимов (после case 'checkauth') добавить:
+
+// ====== MAX УВЕДОМЛЕНИЯ ======
+
+/* --- Вспомогательная функция отправки сообщения в чат MAX --- */
+function maxSendMessage($token, $chatId, $text) {
+	$payload = json_encode(array(
+		'chat_id' => $chatId,
+		'text' => $text,
+		'format' => 'html',
+	));
+	$ch = curl_init('https://platform-api2.max.ru/messages');
+	curl_setopt($ch, CURLOPT_POST, true);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+		'Content-Type: application/json',
+		'Authorization: ' . $token,
+	));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_exec($ch);
+	$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	curl_close($ch);
+	return $httpCode === 200 || $httpCode === 201;
+}
+
+/* --- Настройки по умолчанию --- */
+function maxDefaultSettings() {
+	return array(
+		'new_order' => true,
+		'order_ready' => true,
+		'order_cancelled' => false,
+		'delivery_ids' => array(),
+	);
+}
+
+/* --- Проверка, подходит ли заказ под фильтр по способам получения --- */
+function maxDeliveryMatches($orderDeliveryId, $settings) {
+	$ids = isset($settings['delivery_ids']) ? $settings['delivery_ids'] : array();
+	if (!is_array($ids) || empty($ids)) return true;
+	return in_array($orderDeliveryId, $ids);
+}
+
+/* --- Загрузка/сохранение chats --- */
+function maxLoadChats() {
+	if (!file_exists(MAX_CHATS_FILE)) return array();
+	$data = json_decode(file_get_contents(MAX_CHATS_FILE), true);
+	return is_array($data) ? $data : array();
+}
+
+function maxSaveChats($chats) {
+	file_put_contents(MAX_CHATS_FILE, json_encode($chats, JSON_UNESCAPED_UNICODE));
+}
+
+/* --- Загрузка/сохранение notified --- */
+function maxLoadNotified() {
+	if (!file_exists(MAX_NOTIFIED_FILE)) return array('notified' => array(), 'last_check' => 0);
+	$data = json_decode(file_get_contents(MAX_NOTIFIED_FILE), true);
+	if (!is_array($data)) $data = array('notified' => array(), 'last_check' => 0);
+	if (!isset($data['notified'])) $data['notified'] = array();
+	return $data;
+}
+
+function maxSaveNotified($data) {
+	file_put_contents(MAX_NOTIFIED_FILE, json_encode($data));
+}
+
+/* --- Получение настроек по email --- */
+function maxGetSettingsByEmail($chats, $email) {
+	foreach ($chats as $c) {
+		if ($c['email'] === $email) {
+			return isset($c['settings']) ? $c['settings'] : maxDefaultSettings();
+		}
+	}
+	return null;
+}
+
+/* --- Формирование текста сообщения о заказе --- */
+function maxBuildOrderText($order, $d_methods) {
+	$number = $order->number;
+	$price = $order->getValue('total_price');
+	$poluchatel = $order->getValue('poluchatel') ?: '—';
+	$mobtelefon = $order->getValue('mobtelefon') ?: '—';
+	$email = $order->getValue('email') ?: '—';
+	$comment = $order->getValue('comment') ?: '—';
+
+	$deliveryId = $order->delivery_id;
+	$deliveryName = 'ID ' . $deliveryId;
+	if (!empty($d_methods[$deliveryId])) {
+		$deliveryName = $d_methods[$deliveryId];
+	}
+
+	$text = '<b>Заказ №' . $number . '</b>';
+	$text .= "\n💰 Сумма: " . number_format($price, 0, '', ' ') . ' ₽';
+	$text .= "\n📦 Способ получения: " . $deliveryName;
+	$text .= "\n👤 Получатель: " . $poluchatel;
+	$text .= "\n📞 Телефон: " . $mobtelefon;
+	if ($email && $email !== '—') $text .= "\n📧 E-mail: " . $email;
+	if ($comment && $comment !== '—') $text .= "\n💬 Комментарий: " . $comment;
+	$text .= "\n\nОткрыть заказ: https://orders.pilometr.ru/orders/" . $order->id;
+	return $text;
+}
+
+/* --- Регистрация chat_id --- */
+case 'register_chat':
+	$chatId = isset($_REQUEST['chat_id']) ? $_REQUEST['chat_id'] : '';
+	if (!$chatId) {
+		echo json_encode(['ok' => false, 'error' => 'chat_id required']);
+		break;
+	}
+	$email = isset($_REQUEST['email']) ? $_REQUEST['email'] : '';
+	$settingsRaw = isset($_REQUEST['settings']) ? $_REQUEST['settings'] : '';
+
+	$settings = maxDefaultSettings();
+	if ($settingsRaw) {
+		$parsed = json_decode($settingsRaw, true);
+		if (is_array($parsed)) {
+			foreach ($settings as $k => $v) {
+				if (isset($parsed[$k])) {
+					if (is_bool($v)) {
+						$settings[$k] = $parsed[$k] ? true : false;
+					} elseif (is_array($v) && is_array($parsed[$k])) {
+						$settings[$k] = array();
+						foreach ($parsed[$k] as $item) {
+							$settings[$k][] = intval($item);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	$chats = maxLoadChats();
+	$found = false;
+	foreach ($chats as &$c) {
+		if ($c['chat_id'] === $chatId) {
+			if ($email) $c['email'] = $email;
+			$c['settings'] = $settings;
+			$found = true;
+			break;
+		}
+	}
+	unset($c);
+	if (!$found) {
+		$chats[] = array(
+			'chat_id' => $chatId,
+			'email' => $email,
+			'settings' => $settings,
+			'created_at' => time(),
+		);
+	}
+	maxSaveChats($chats);
+	echo json_encode(['ok' => true]);
+	break;
+
+/* --- Получить настройки текущего пользователя --- */
+case 'get_max_settings':
+	$email = isset($_SESSION['auth_email']) ? $_SESSION['auth_email'] : '';
+	if (!$email) {
+		echo json_encode(['ok' => false, 'error' => 'email not found in session']);
+		break;
+	}
+	$chats = maxLoadChats();
+	$settings = maxGetSettingsByEmail($chats, $email);
+	if ($settings === null) {
+		$settings = maxDefaultSettings();
+		$chats[] = array('chat_id' => '', 'email' => $email, 'settings' => $settings, 'created_at' => time());
+		maxSaveChats($chats);
+	}
+	// возвращаем также список способов получения
+	$dMethods = array();
+	if (isset($d_methods) && is_array($d_methods)) {
+		$dMethods = $d_methods;
+	}
+	echo json_encode(['ok' => true, 'settings' => $settings, 'd_methods' => $dMethods]);
+	break;
+
+/* --- Обновить настройки текущего пользователя --- */
+case 'update_max_settings':
+	$email = isset($_SESSION['auth_email']) ? $_SESSION['auth_email'] : '';
+	if (!$email) {
+		echo json_encode(['ok' => false, 'error' => 'email not found in session']);
+		break;
+	}
+	$settingsRaw = isset($_REQUEST['settings']) ? $_REQUEST['settings'] : '';
+	$settings = json_decode($settingsRaw, true);
+	if (!is_array($settings)) {
+		echo json_encode(['ok' => false, 'error' => 'invalid settings']);
+		break;
+	}
+	// приводим delivery_ids к числам
+	if (isset($settings['delivery_ids']) && is_array($settings['delivery_ids'])) {
+		$cleanIds = array();
+		foreach ($settings['delivery_ids'] as $id) {
+			$cleanIds[] = intval($id);
+		}
+		$settings['delivery_ids'] = $cleanIds;
+	}
+	$chats = maxLoadChats();
+	$found = false;
+	foreach ($chats as &$c) {
+		if ($c['email'] === $email) {
+			$c['settings'] = $settings;
+			$found = true;
+			break;
+		}
+	}
+	unset($c);
+	if (!$found) {
+		$chats[] = array('chat_id' => '', 'email' => $email, 'settings' => $settings, 'created_at' => time());
+	}
+	maxSaveChats($chats);
+	echo json_encode(['ok' => true]);
+	break;
+
+/* --- Отправить уведомление (ручная кнопка в карточке заказа) --- */
+case 'send_max_notification':
+	$orderId = isset($_REQUEST['order_id']) ? intval($_REQUEST['order_id']) : 0;
+	if (!$orderId) {
+		echo json_encode(['ok' => false, 'error' => 'order_id required']);
+		break;
+	}
+	$sel = new selector('objects');
+	$sel->types('hierarchy-type')->name('emarket', 'order');
+	$sel->where('id')->equals($orderId);
+	$order = $sel->result[0];
+	if (!$order) {
+		echo json_encode(['ok' => false, 'error' => 'order not found']);
+		break;
+	}
+	$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array());
+	$token = MAX_BOT_TOKEN;
+	if (!$token) {
+		echo json_encode(['ok' => false, 'error' => 'bot token not configured']);
+		break;
+	}
+	$chats = maxLoadChats();
+	if (empty($chats)) {
+		echo json_encode(['ok' => false, 'error' => 'no chats registered']);
+		break;
+	}
+	$successCount = 0;
+	foreach ($chats as $c) {
+		if (empty($c['chat_id'])) continue;
+		$settings = isset($c['settings']) ? $c['settings'] : maxDefaultSettings();
+		// проверяем фильтр по способам получения
+		if (!maxDeliveryMatches($order->delivery_id, $settings)) continue;
+		if (maxSendMessage($token, $c['chat_id'], $text)) {
+			$successCount++;
+		}
+	}
+	echo json_encode(['ok' => $successCount > 0, 'sent' => $successCount, 'total' => count($chats)]);
+	break;
+
+/* --- Автоматическая проверка новых заказов и уведомление --- */
+case 'auto_notify':
+	$token = MAX_BOT_TOKEN;
+	if (!$token) {
+		echo json_encode(['ok' => false, 'error' => 'bot token not configured']);
+		break;
+	}
+	$domainId = cmsController::getInstance()->getCurrentDomain()->getId();
+	$notifiedData = maxLoadNotified();
+	$notifiedIds = $notifiedData['notified'];
+	$lastCheck = $notifiedData['last_check'];
+
+	$now = time();
+	$chats = maxLoadChats();
+	if (empty($chats)) {
+		echo json_encode(['ok' => false, 'error' => 'no chats registered']);
+		break;
+	}
+
+	// ищем заказы, созданные или изменённые после last_check
+	$sel = new selector('objects');
+	$sel->types('hierarchy-type')->name('emarket', 'order');
+	$sel->option('no-length')->value(false);
+	$sel->option('load-all-props')->value(true);
+	$sel->where('domain_id')->equals($domainId);
+	$sel->where('status_id')->equals(array(97, 99, 100, 101, 98, 102, 95, 96));
+	if ($lastCheck > 0) {
+		$sel->where('order_date')->eqmore($lastCheck);
+	} else {
+		// первый запуск — только за последние 2 часа
+		$sel->where('order_date')->eqmore(time() - 7200);
+	}
+
+	$sent = 0;
+	$newNotified = $notifiedIds;
+
+	foreach ($sel->result as $order) {
+		$orderId = $order->id;
+		$statusId = $order->status_id;
+
+		// определяем тип события
+		$eventType = null;
+		if ($statusId == 97 || $statusId == 99) {
+			$eventType = 'new_order';
+		} elseif ($statusId == 100 || $statusId == 101) {
+			$eventType = 'order_ready';
+		} elseif ($statusId == 95 || $statusId == 96) {
+			$eventType = 'order_cancelled';
+		}
+
+		if (!$eventType) continue;
+
+		// проверяем, не отправляли ли уже это событие
+		$alreadySent = false;
+		if (isset($newNotified[$orderId]) && is_array($newNotified[$orderId])) {
+			if (in_array($eventType, $newNotified[$orderId])) {
+				$alreadySent = true;
+			}
+		}
+
+		if ($alreadySent) continue;
+
+		// отправляем только пользователям, у которых включён этот тип события
+		// и подходит способ получения
+		$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array());
+
+		foreach ($chats as $c) {
+			if (empty($c['chat_id'])) continue;
+			$settings = isset($c['settings']) ? $c['settings'] : maxDefaultSettings();
+			if (empty($settings[$eventType])) continue;
+			if (!maxDeliveryMatches($order->delivery_id, $settings)) continue;
+			if (maxSendMessage($token, $c['chat_id'], $text)) {
+				$sent++;
+			}
+		}
+
+		// помечаем как отправленное
+		if (!isset($newNotified[$orderId])) {
+			$newNotified[$orderId] = array();
+		}
+		$newNotified[$orderId][] = $eventType;
+	}
+
+	maxSaveNotified(array('notified' => $newNotified, 'last_check' => $now));
+	echo json_encode(['ok' => true, 'sent' => $sent, 'total' => count($chats)]);
+	break;
+// ====== КОНЕЦ MAX ======

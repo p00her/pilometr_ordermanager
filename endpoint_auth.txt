@@ -1,0 +1,62 @@
+Добавить в начало switch, перед case 'alldost':
+
+	// ====== АВТОРИЗАЦИЯ ======
+case 'login':
+    $login = isset($_REQUEST['login']) ? $_REQUEST['login'] : '';
+    $password = isset($_REQUEST['password']) ? $_REQUEST['password'] : '';
+		$sel = new selector('objects');
+		$sel->types('hierarchy-type')->name('users', 'user');
+		$sel->where('e-mail')->equals($login);
+		$user = $sel->result[0];
+		if ($user && $user->getValue('password') === md5($password)) {
+			// проверка группы "Супервайзер"
+			$groups = $user->getValue('groups');
+			$isSupervisor = false;
+			if (is_array($groups)) {
+				foreach ($groups as $gid) {
+					$g = $objectsCollection->getObject($gid);
+					if ($g && stripos($g->name, 'супервайзер') !== false) {
+						$isSupervisor = true;
+						break;
+					}
+				}
+			}
+			if (!$isSupervisor) {
+				echo json_encode(['ok' => false, 'error' => 'Доступ только для супервайзеров']);
+				break;
+			}
+			$_SESSION['auth'] = $user->id;
+			$_SESSION['auth_name'] = $user->name;
+			$_SESSION['auth_email'] = $login;
+			echo json_encode(['ok' => true, 'name' => $user->name]);
+		} else {
+			echo json_encode(['ok' => false, 'error' => 'Неверный логин или пароль']);
+		}
+		break;
+
+	case 'logout':
+		session_destroy();
+		echo json_encode(['ok' => true]);
+		break;
+
+	case 'checkauth':
+		echo json_encode([
+			'ok' => isset($_SESSION['auth']),
+			'name' => isset($_SESSION['auth_name']) ? $_SESSION['auth_name'] : '',
+		]);
+		break;
+	// ====== КОНЕЦ АВТОРИЗАЦИИ ======
+
+Также в теле файла найти:
+	$mode = $data['mode'];
+и сразу после добавить защиту:
+
+	// защита — публичные режимы
+	$publicModes = ['login', 'checkauth', 'logout'];
+	if (!in_array($mode, $publicModes) && !isset($_SESSION['auth'])) {
+		echo json_encode(['error' => 'auth_required']);
+		exit;
+	}
+
+Примечание:
+- Если группа называется не "Супервайзер" (строка), а иначе — поправить в `stripos($g->name, 'супервайзер')`

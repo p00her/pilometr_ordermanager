@@ -1,0 +1,81 @@
+case 'getstat':
+	$domainId = cmsController::getInstance()->getCurrentDomain()->getId();
+	$select = new selector('objects');
+	$select->types('hierarchy-type')->name('emarket', 'order');
+	$select->option('no-length')->value(false);
+	$select->option('load-all-props')->value(true);
+	$select->limit($_REQUEST['start'],$_REQUEST['length']);
+	$select->where('total_price')->notequals(0);
+	$select->where('name')->isNull(false);
+	$select->where('domain_id')->equals($domainId);
+	$select->where('number')->eqmore(4241);
+	$select->where('status_id')->equals(array(97,99,100,101,98,102,95,96));
+
+	$select->where('order_date')->eqmore(strtotime($_REQUEST['date_from']));
+	$select->where('order_date')->eqless(strtotime($_REQUEST['date_to'].' 23:59'));
+
+	$result['recordsTotal'] = $select->length;
+	$result['d_methods'] = $d_methods;
+
+	$initGroup = array(
+		'total'=>0,
+		'total_order_price'=>0,
+		'total_weight'=>0,
+		'total_volume'=>0,
+	);
+
+	$result['by_delivery'] = array();
+	$result['total'] = $initGroup;
+
+	foreach($select->result as $order) {
+		$deliveryKey = $order->delivery_id ? (string)$order->delivery_id : '0';
+		if (!isset($result['by_delivery'][$deliveryKey])) {
+			$result['by_delivery'][$deliveryKey] = $initGroup;
+		}
+
+		$price = $order->getValue('total_price');
+		$weight = $order->r_weight ?: 0;
+		$volume = $order->r_volume ?: 0;
+
+		if ($order->status_id == 97 || $order->status_id == 99) {
+			$group = 'in_progress';
+		} elseif ($order->status_id == 100 || $order->status_id == 101) {
+			$group = 'ready';
+		} elseif ($order->status_id == 98 || $order->status_id == 102) {
+			$group = 'closed';
+		} elseif ($order->status_id == 95 || $order->status_id == 96) {
+			$group = 'cancelled';
+		} else {
+			continue;
+		}
+
+		if (!isset($result['by_delivery'][$deliveryKey][$group])) {
+			$result['by_delivery'][$deliveryKey][$group] = $initGroup;
+		}
+		if (!isset($result['total'][$group])) {
+			$result['total'][$group] = $initGroup;
+		}
+
+		$result['by_delivery'][$deliveryKey][$group]['total'] += 1;
+		$result['by_delivery'][$deliveryKey][$group]['total_order_price'] += $price;
+		$result['by_delivery'][$deliveryKey][$group]['total_weight'] += $weight;
+		$result['by_delivery'][$deliveryKey][$group]['total_volume'] += $volume;
+
+		$result['total'][$group]['total'] += 1;
+		$result['total'][$group]['total_order_price'] += $price;
+		$result['total'][$group]['total_weight'] += $weight;
+		$result['total'][$group]['total_volume'] += $volume;
+
+		$result['by_delivery'][$deliveryKey]['total'] += 1;
+		$result['by_delivery'][$deliveryKey]['total_order_price'] += $price;
+		$result['by_delivery'][$deliveryKey]['total_weight'] += $weight;
+		$result['by_delivery'][$deliveryKey]['total_volume'] += $volume;
+
+		$result['total']['total'] += 1;
+		$result['total']['total_order_price'] += $price;
+		$result['total']['total_weight'] += $weight;
+		$result['total']['total_volume'] += $volume;
+	}
+
+	echo json_encode($result, JSON_UNESCAPED_UNICODE);
+	break;
