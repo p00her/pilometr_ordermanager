@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTheme } from '@mui/material';
 import JsBarcode from 'jsbarcode';
 
 interface Props {
@@ -9,36 +10,31 @@ interface Props {
 
 export default function Barcode({ value, width = 1.2, height = 36 }: Props) {
   const ref = useRef<SVGSVGElement>(null);
+  const theme = useTheme();
+  const color = theme.palette.mode === 'dark' ? '#fff' : '#000';
 
   useEffect(() => {
     if (ref.current && value) {
+      const opts = {
+        width,
+        height,
+        displayValue: true,
+        fontSize: 12,
+        textMargin: 2,
+        margin: 0,
+        background: 'transparent',
+        lineColor: color,
+        fontColor: color,
+      };
       try {
-        JsBarcode(ref.current, value, {
-          format: 'EAN13',
-          width,
-          height,
-          displayValue: true,
-          fontSize: 12,
-          textMargin: 2,
-          margin: 0,
-          background: 'transparent',
-        });
+        JsBarcode(ref.current, value, { ...opts, format: 'EAN13' });
       } catch {
         try {
-          JsBarcode(ref.current, value, {
-            format: 'CODE128',
-            width,
-            height,
-            displayValue: true,
-            fontSize: 12,
-            textMargin: 2,
-            margin: 0,
-            background: 'transparent',
-          });
+          JsBarcode(ref.current, value, { ...opts, format: 'CODE128' });
         } catch {}
       }
     }
-  }, [value, width, height]);
+  }, [value, width, height, color]);
 
   if (!value) return <span>—</span>;
 
