@@ -38,7 +38,6 @@ async function initDb() {
 }
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
 
 app.use('/endpoint.php', (req, res) => {
   const query = req.url.replace(/^\//, '');
@@ -70,6 +69,8 @@ app.use('/endpoint.php', (req, res) => {
   });
   req.pipe(proxyReq);
 });
+
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/api/notes/:orderId', (req, res) => {
   const stmt = db.prepare('SELECT note, updated_at FROM notes WHERE order_id = ?');
