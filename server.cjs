@@ -1,6 +1,5 @@
 const express = require('express');
 const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
-const http = require('http');
 const https = require('https');
 const path = require('path');
 const initSqlJs = require('sql.js');
@@ -138,12 +137,12 @@ app.get('*path', (_req, res) => {
   await initDb();
   const certPath = path.join(CERT_DIR, 'live', 'npm-1');
   const hasCerts = existsSync(path.join(certPath, 'fullchain.pem'));
-  app.listen(PORT, () => console.log('HTTP server on port ' + PORT));
   if (hasCerts) {
-    const httpsPort = Number(PORT) + 1; // 8089
     https.createServer({
       key: readFileSync(path.join(certPath, 'privkey.pem')),
       cert: readFileSync(path.join(certPath, 'fullchain.pem')),
-    }, app).listen(httpsPort, () => console.log('HTTPS server on port ' + httpsPort));
+    }, app).listen(PORT, () => console.log('HTTPS server on port ' + PORT));
+  } else {
+    app.listen(PORT, () => console.log('HTTP server on port ' + PORT));
   }
 })();
