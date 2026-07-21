@@ -23,7 +23,11 @@ import {
   FormControl,
   Checkbox,
   ListItemText,
+  Collapse,
+  IconButton,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getOrdersListSince, getReferenceData, API_URL } from '../api/ordersApi';
 import { autoNotify } from '../api/maxApi';
 import { getAllOrders, mergeOrders, replaceOrders, getMeta, setMeta } from '../db/db';
@@ -76,6 +80,7 @@ export default function OrdersList() {
 
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [newCount, setNewCount] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const [sortField, setSortField] = useState<'number' | 'order_date'>('number');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -271,6 +276,13 @@ export default function OrdersList() {
         </Box>
       </Box>
 
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Button size="small" onClick={() => setFiltersOpen((v) => !v)}>
+          {filtersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          Фильтры
+        </Button>
+      </Box>
+      <Collapse in={filtersOpen}>
       <Paper elevation={1} sx={{ p: { xs: 1, sm: 2 }, mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'end' }}>
           <TextField
@@ -388,6 +400,7 @@ export default function OrdersList() {
           </FormControl>
         </Box>
       </Paper>
+      </Collapse>
 
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
