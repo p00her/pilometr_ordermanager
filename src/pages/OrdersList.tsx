@@ -174,8 +174,14 @@ export default function OrdersList() {
   }, []);
 
   useEffect(() => {
+    const handler = () => sync();
+    window.addEventListener('order-changed', handler);
+    return () => window.removeEventListener('order-changed', handler);
+  }, [sync]);
+
+  useEffect(() => {
     if (!autoRefresh) return;
-    const id = setInterval(() => sync(), 10000);
+    const id = setInterval(() => sync(), 30000);
     return () => clearInterval(id);
   }, [autoRefresh, sync]);
 

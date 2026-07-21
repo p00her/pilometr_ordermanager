@@ -157,6 +157,7 @@ export default function OrderDetail() {
       setOrder((prev) => prev ? { ...prev, ...editedFields } as OrderDetail : null);
       setEditedFields({});
       setSuccess('Заказ сохранен');
+      window.dispatchEvent(new CustomEvent('order-changed'));
     } catch {
       setError('Ошибка сохранения');
     } finally {
@@ -188,6 +189,7 @@ export default function OrderDetail() {
     try {
       await removeOrderItem(API_URL, orderId, itemId);
       setItems((prev) => prev.filter((_, i) => i !== itemIdx));
+      window.dispatchEvent(new CustomEvent('order-changed'));
     } catch {
       setError('Ошибка удаления товара');
     }
@@ -199,6 +201,7 @@ export default function OrderDetail() {
     try {
       await setItemAmount(API_URL, orderId, [{ id: itemId, value }]);
       setItems((prev) => prev.map((it, i) => i === itemIdx ? { ...it, amount: value } : it));
+      window.dispatchEvent(new CustomEvent('order-changed'));
     } catch {
       setError('Ошибка изменения количества');
     }
@@ -254,6 +257,7 @@ export default function OrderDetail() {
       setAddDialogOpen(false);
       setPendingItems([]);
       setAddBarcode('');
+      window.dispatchEvent(new CustomEvent('order-changed'));
     } catch {
       setError('Ошибка добавления товаров');
     }
