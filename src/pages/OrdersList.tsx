@@ -432,7 +432,7 @@ export default function OrdersList() {
                       Дата
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell>Получатель</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Получатель</TableCell>
                   <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Телефон</TableCell>
                   <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>E-mail</TableCell>
                   <TableCell>Сумма</TableCell>
@@ -452,7 +452,7 @@ export default function OrdersList() {
                   >
                     <TableCell>{order.number}</TableCell>
                     <TableCell>{order.order_date}</TableCell>
-                    <TableCell>{order.poluchatel}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{order.poluchatel}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{order.mobtelefon}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{order.email ?? '—'}</TableCell>
                     <TableCell>
