@@ -57,14 +57,16 @@ export default function MaxApp() {
       return;
     }
     setStatus('loading');
+    setDebug('Отправка: chat_id=' + chatId + ', email=' + email);
     try {
       const res = await registerChat(chatId, email);
+      setDebug('Ответ: ' + JSON.stringify(res));
       if (res.ok) {
         setStatus('done');
         setMessage('Подключение MAX выполнено! Теперь вы будете получать уведомления о заказах.');
       } else {
         setStatus('error');
-        setMessage('Ошибка при подключении');
+        setMessage('Ошибка: ' + ((res as any).error || 'неизвестная'));
       }
     } catch {
       setStatus('error');
