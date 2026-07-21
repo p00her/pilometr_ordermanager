@@ -201,10 +201,12 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 1.5, sm: 2, md: 3 },
           mt: 8,
           minHeight: 'calc(100vh - 64px)',
           bgcolor: 'background.default',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
         }}
       >
         <Outlet />

@@ -241,8 +241,8 @@ export default function OrdersList() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <Typography variant="h5">Заказы</Typography>
           <Typography variant="caption" color="text.secondary">
             {autoRefresh ? '🔄 авт.' : '⏸ пауза'}
@@ -271,21 +271,21 @@ export default function OrdersList() {
         </Box>
       </Box>
 
-      <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'end' }}>
+      <Paper elevation={1} sx={{ p: { xs: 1, sm: 2 }, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'end' }}>
           <TextField
             label="Номер"
             size="small"
             value={filters.number}
             onChange={(e) => setFilters((f) => ({ ...f, number: e.target.value }))}
-            sx={{ width: 100 }}
+            sx={{ width: { xs: '100%', sm: 100 }, maxWidth: { xs: 'none', sm: 100 } }}
           />
           <TextField
             label="Получатель"
             size="small"
             value={filters.poluchatel}
             onChange={(e) => setFilters((f) => ({ ...f, poluchatel: e.target.value }))}
-            sx={{ width: 160 }}
+            sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 140 } }}
           />
           <TextField
             label="Телефон"
@@ -302,7 +302,7 @@ export default function OrdersList() {
               setFilters((f) => ({ ...f, phone: formatted }));
             }}
             placeholder="+7 (000) 000-00-00"
-            sx={{ width: 190 }}
+            sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 170 } }}
           />
           <TextField
             label="E-mail"
@@ -310,7 +310,7 @@ export default function OrdersList() {
             value={filters.email}
             onChange={(e) => setFilters((f) => ({ ...f, email: e.target.value }))}
             placeholder="фильтр по email"
-            sx={{ width: 190 }}
+            sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 170 } }}
           />
           <TextField
             label="Дата с"
@@ -319,6 +319,7 @@ export default function OrdersList() {
             value={filters.dateFrom}
             onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
             slotProps={{ inputLabel: { shrink: true } }}
+            sx={{ flex: { xs: '1 1 calc(50% - 12px)', sm: '0 1 auto' } }}
           />
           <TextField
             label="Дата по"
@@ -327,8 +328,9 @@ export default function OrdersList() {
             value={filters.dateTo}
             onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
             slotProps={{ inputLabel: { shrink: true } }}
+            sx={{ flex: { xs: '1 1 calc(50% - 12px)', sm: '0 1 auto' } }}
           />
-          <FormControl size="small" sx={{ minWidth: 200 }}>
+          <FormControl size="small" sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 200 } }}>
             <InputLabel>Статус</InputLabel>
             <Select
               multiple
@@ -349,7 +351,7 @@ export default function OrdersList() {
                 ))}
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
+          <FormControl size="small" sx={{ flex: { xs: '1 1 calc(50% - 6px)', sm: '0 1 auto' }, minWidth: { xs: 'auto', sm: 160 } }}>
             <InputLabel>Способ оплаты</InputLabel>
             <Select
               value={filters.paymentId}
@@ -363,7 +365,7 @@ export default function OrdersList() {
                 ))}
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: 200 }}>
+          <FormControl size="small" sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 200 } }}>
             <InputLabel>Способ получения</InputLabel>
             <Select
               multiple

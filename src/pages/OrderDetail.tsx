@@ -368,7 +368,7 @@ export default function OrderDetail() {
       )}
 
       <Box className="no-print">
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             Основные данные
           </Typography>
@@ -516,66 +516,65 @@ export default function OrderDetail() {
         <Typography>Комментарий: {order?.comment || '—'}</Typography>
       </Box>
 
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={2} sx={{ p: { xs: 1, sm: 2, md: 3 }, mb: 3 }}>
           <Box className="no-print"
             sx={{
               display: 'flex',
+              flexWrap: 'wrap',
               justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 1,
               mb: 2,
             }}
           >
             <Typography variant="h6">Товары в заказе</Typography>
-            <Button variant="contained" onClick={() => setAddDialogOpen(true)}>
+            <Button variant="contained" size="small" onClick={() => setAddDialogOpen(true)}>
               Добавить товар
             </Button>
           </Box>
           <Typography variant="h6" className="print-only" sx={{ mb: 2 }}>Товары в заказе</Typography>
-        <TableContainer>
+        <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Название</TableCell>
-                <TableCell>Артикул</TableCell>
-                <TableCell>Штрихкод</TableCell>
-                <TableCell>Кол-во</TableCell>
-                <TableCell>Цена</TableCell>
-                <TableCell>Вес</TableCell>
-                <TableCell>Объем</TableCell>
-                <TableCell className="hide-print-col">Остатки</TableCell>
-                <TableCell className="hide-print-col">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.artikul ?? '—'}</TableCell>
-                  <TableCell><Barcode value={item.bar_code ?? ''} /></TableCell>
-                  <TableCell>
-                    <span className="no-print">
-                      <TextField
-                        type="number"
-                        size="small"
-                        value={item.amount}
-                        sx={{ width: 70 }}
-                        slotProps={{ htmlInput: { min: 1 } }}
-                        onChange={(e) =>
-                          handleAmountChange(idx, item.id, Number(e.target.value))
-                        }
-                      />
-                    </span>
-                    <span className="print-only">{item.amount}</span>
-                  </TableCell>
-                  <TableCell>
-                    {item.price?.toLocaleString('ru-RU', {
-                      style: 'currency',
-                      currency: 'RUB',
-                    })}
-                  </TableCell>
-                  <TableCell>{item.weight ?? '—'}</TableCell>
-                  <TableCell>{item.volume ?? '—'}</TableCell>
-                  <TableCell className="hide-print-col">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Название</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Артикул</TableCell>
+                  <TableCell>Штрихкод</TableCell>
+                  <TableCell>Кол-во</TableCell>
+                  <TableCell>Цена</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Вес</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Объем</TableCell>
+                  <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Остатки</TableCell>
+                  <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Действия</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {items.map((item, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.artikul ?? '—'}</TableCell>
+                    <TableCell><Barcode value={item.bar_code ?? ''} /></TableCell>
+                    <TableCell>
+                      <span className="no-print">
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={item.amount}
+                          sx={{ width: { xs: 55, sm: 70 } }}
+                          onChange={(e) => handleAmountChange(idx, e)}
+                        />
+                      </span>
+                      <span className="print-only">{item.amount}</span>
+                    </TableCell>
+                    <TableCell>
+                      {item.price.toLocaleString('ru-RU', {
+                        style: 'currency',
+                        currency: 'RUB',
+                      })}
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.weight ?? '—'}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.volume ?? '—'}</TableCell>
+                    <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     {loadingStorage ? (
                       <CircularProgress size={16} />
                     ) : storageKeys.length > 0 && (
@@ -611,7 +610,7 @@ export default function OrderDetail() {
                       )
                     )}
                   </TableCell>
-                  <TableCell className="hide-print-col no-print">
+                  <TableCell className="hide-print-col no-print" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <IconButton
                       color="error"
                       size="small"
@@ -624,7 +623,7 @@ export default function OrderDetail() {
               ))}
               {items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
+                  <TableCell colSpan={100} align="center">
                     Нет товаров
                   </TableCell>
                 </TableRow>

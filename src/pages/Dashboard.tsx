@@ -158,11 +158,11 @@ export default function Dashboard() {
           </Grid>
 
           <Card elevation={2} sx={{ mb: 3 }}>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
               <Typography variant="h6" gutterBottom>
                 По способам получения
               </Typography>
-              <TableContainer>
+              <TableContainer sx={{ overflowX: 'auto' }}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
