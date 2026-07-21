@@ -8,7 +8,7 @@ import OrderDetail from './pages/OrderDetail';
 import Login from './pages/Login';
 import MaxApp from './pages/MaxApp';
 import MaxSettings from './pages/MaxSettings';
-import { checkAuth } from './api/auth';
+import { checkAuth, logout as apiLogout } from './api/auth';
 
 export default function App() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -40,7 +40,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/max-app" element={<MaxApp />} />
-          <Route path="/" element={<Layout userName={userName} onLogout={() => setAuthed(false)} />}>
+          <Route path="/" element={<Layout userName={userName} onLogout={async () => { await apiLogout(); setAuthed(false); }} />}>
             <Route index element={<Dashboard />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<OrderDetail />} />
