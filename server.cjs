@@ -40,71 +40,38 @@ async function initDb() {
 const app = express();
 
 app.use('/endpoint.php', (req, res) => {
-  let baseUrl = '/endpoint.php';
   const query = req.url.replace(/^\//, '');
-  if (query) baseUrl += '?' + query;
-
+  const path = '/endpoint.php' + (query ? '?' + query : '');
   const headers = { ...req.headers, Host: 'pilometr.ru' };
   headers['X-Real-IP'] = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
   headers['X-Forwarded-Proto'] = 'https';
-  delete headers['sec-fetch-site'];
-  delete headers['sec-fetch-mode'];
-  delete headers['sec-fetch-dest'];
-  delete headers['sec-ch-ua'];
-  delete headers['sec-ch-ua-mobile'];
-  delete headers['sec-ch-ua-platform'];
-
-  const sendRequest = (method, path, body) => {
-    const options = {
-      hostname: 'pilometr.ru',
-      port: 443,
-      path,
-      method,
-      headers: { ...headers },
-      rejectUnauthorized: false,
-    };
-    if (body) {
-      options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      options.headers['Content-Length'] = Buffer.byteLength(body);
-    } else {
-      delete options.headers['content-length'];
-      delete options.headers['content-type'];
-      delete options.headers['transfer-encoding'];
-    }
-    const proxyReq = https.request(options, (proxyRes) => {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
-      proxyRes.pipe(res);
-    });
-    proxyReq.on('error', (err) => {
-      res.status(500).send('Proxy error: ' + err.message);
-    });
-    if (body) proxyReq.end(body);
-    else proxyReq.end();
+  for (const h of ['sec-fetch-site','sec-fetch-mode','sec-fetch-dest','sec-ch-ua','sec-ch-ua-mobile','sec-ch-ua-platform']) {
+    delete headers[h];
+  }
+  const opts = {
+    hostname: 'pilometr.ru',
+    port: 443,
+    path,
+    method: req.method,
+    headers,
+    rejectUnauthorized: false,
   };
-
+  if (req.method !== 'POST') {
+    delete opts.headers['content-length'];
+    delete opts.headers['content-type'];
+    delete opts.headers['transfer-encoding'];
+  }
+  const proxyReq = https.request(opts, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+  proxyReq.on('error', (err) => {
+    res.status(500).send('Proxy error: ' + err.message);
+  });
   if (req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      let params = [];
-      if (body) {
-        try {
-          const json = JSON.parse(body);
-          for (const [k, v] of Object.entries(json)) {
-            params.push(encodeURIComponent(k) + '=' + encodeURIComponent(String(v)));
-          }
-        } catch {
-          for (const part of body.split('&')) {
-            const [k, v] = part.split('=').map(s => decodeURIComponent(s));
-            params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v || ''));
-          }
-        }
-      }
-      const sep = baseUrl.includes('?') ? '&' : '?';
-      sendRequest('GET', baseUrl + sep + params.join('&'));
-    });
+    req.pipe(proxyReq);
   } else {
-    sendRequest(req.method, baseUrl);
+    proxyReq.end();
   }
 });
 
