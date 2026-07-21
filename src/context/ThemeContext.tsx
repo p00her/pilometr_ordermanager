@@ -27,11 +27,6 @@ function buildTheme(mode: 'light' | 'dark') {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     },
     components: {
-      MuiDrawer: {
-        styleOverrides: {
-          paper: { width: 260 },
-        },
-      },
       MuiListItemButton: {
         styleOverrides: {
           root: {

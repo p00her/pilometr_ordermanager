@@ -75,7 +75,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
               Магазины
             </Typography>
-            <IconButton size="small" onClick={() => setSidebarCollapsed(true)}>
+            <IconButton onClick={() => setSidebarCollapsed(true)}>
               <ChevronLeftIcon />
             </IconButton>
           </>
@@ -184,7 +184,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: 260 } }}
+            slotProps={{ paper: { sx: { width: 260 } } }}
           >
             {drawer}
           </Drawer>
@@ -192,11 +192,13 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
           <Drawer
             variant="permanent"
             open
-            sx={{
-              '& .MuiDrawer-paper': {
-                width: drawerWidth,
-                transition: 'width 0.2s ease',
-                overflowX: 'hidden',
+            slotProps={{
+              paper: {
+                sx: {
+                  width: drawerWidth,
+                  transition: 'width 0.2s ease',
+                  overflowX: 'hidden',
+                },
               },
             }}
           >
