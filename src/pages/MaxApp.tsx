@@ -27,19 +27,16 @@ export default function MaxApp() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'done' | 'error'>('loading');
   const [message, setMessage] = useState('');
-  const [debug, setDebug] = useState('');
 
   useEffect(() => {
     const wa = window.WebApp;
     if (wa) {
       const data = wa.initDataUnsafe;
       if (data) {
-        setDebug('WebApp.initDataUnsafe: ' + JSON.stringify(data));
         const id = data.chat?.id || data.user?.id;
         if (id) setChatId(String(id));
         wa.ready();
       } else {
-        setDebug('WebApp.initData: ' + (wa.initData || '(empty)'));
         setMessage('initDataUnsafe отсутствует. WebApp есть, но нет данных инициализации.');
         setStatus('error');
       }
@@ -57,10 +54,8 @@ export default function MaxApp() {
       return;
     }
     setStatus('loading');
-    setDebug('Отправка: chat_id=' + chatId + ', email=' + email);
     try {
       const res = await registerChat(chatId, email);
-      setDebug('Ответ: ' + JSON.stringify(res));
       if (res.ok) {
         setStatus('done');
         setMessage('Подключение MAX выполнено! Теперь вы будете получать уведомления о заказах.');
@@ -125,11 +120,7 @@ export default function MaxApp() {
                 {message}
               </Alert>
             )}
-            {debug && (
-              <Box sx={{ mt: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1, fontSize: 11, wordBreak: 'break-all' }}>
-                {debug}
-              </Box>
-            )}
+
           </>
         )}
       </Paper>
