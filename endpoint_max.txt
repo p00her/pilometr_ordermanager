@@ -86,7 +86,7 @@ function maxGetSettingsByEmail($chats, $email) {
 }
 
 /* --- Формирование текста сообщения о заказе --- */
-function maxBuildOrderText($order, $d_methods) {
+function maxBuildOrderText($order, $d_methods, $p_methods = array(), $p_statuses = array()) {
 	$number = $order->number;
 	$price = $order->getValue('total_price');
 	$poluchatel = $order->getValue('poluchatel') ?: '—';
@@ -100,9 +100,22 @@ function maxBuildOrderText($order, $d_methods) {
 		$deliveryName = $d_methods[$deliveryId];
 	}
 
+	$paymentId = $order->payment_id;
+	$paymentName = 'ID ' . $paymentId;
+	if (!empty($p_methods[$paymentId])) {
+		$paymentName = $p_methods[$paymentId];
+	}
+
+	$paymentStatusId = $order->payment_status_id;
+	$paymentStatusName = 'ID ' . $paymentStatusId;
+	if (!empty($p_statuses[$paymentStatusId])) {
+		$paymentStatusName = $p_statuses[$paymentStatusId];
+	}
+
 	$text = '<b>Заказ №' . $number . '</b>';
 	$text .= "\n💰 Сумма: " . number_format($price, 0, '', ' ') . ' ₽';
 	$text .= "\n📦 Способ получения: " . $deliveryName;
+	$text .= "\n💳 Оплата: " . $paymentName . ' (' . $paymentStatusName . ')';
 	$text .= "\n👤 Получатель: " . $poluchatel;
 	$text .= "\n📞 Телефон: " . $mobtelefon;
 	if ($email && $email !== '—') $text .= "\n📧 E-mail: " . $email;
@@ -253,7 +266,7 @@ case 'send_max_notification':
 		echo json_encode(['ok' => false, 'error' => 'order not found']);
 		break;
 	}
-	$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array());
+	$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array(), isset($p_methods) ? $p_methods : array(), isset($p_statuses) ? $p_statuses : array());
 	$token = MAX_BOT_TOKEN;
 	if (!$token) {
 		echo json_encode(['ok' => false, 'error' => 'bot token not configured']);
@@ -339,7 +352,7 @@ case 'auto_notify':
 
 		// отправляем только пользователям, у которых включён этот тип события
 		// и подходит способ получения
-		$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array());
+		$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array(), isset($p_methods) ? $p_methods : array(), isset($p_statuses) ? $p_statuses : array());
 
 		foreach ($chats as $c) {
 			if (empty($c['chat_id'])) continue;

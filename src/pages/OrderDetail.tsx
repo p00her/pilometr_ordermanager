@@ -65,6 +65,8 @@ export default function OrderDetail() {
   const [editedFields, setEditedFields] = useState<Record<string, unknown>>({});
   const [maxSending, setMaxSending] = useState(false);
   const [maxSent, setMaxSent] = useState(false);
+  const [note, setNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
 
   const storageKeys = useMemo(() => {
     const did = Number(order?.delivery_id);
@@ -127,6 +129,20 @@ export default function OrderDetail() {
       setLoadingStorage(false);
     }).catch(() => setLoadingStorage(false));
   }, [orderId, items.length > 0]);
+
+  useEffect(() => {
+    getMeta('order_note_' + orderId).then((val) => {
+      setNote(val ?? '');
+    });
+  }, [orderId]);
+
+  useEffect(() => {
+    setNoteSaving(true);
+    const timer = setTimeout(() => {
+      setMeta('order_note_' + orderId, note).finally(() => setNoteSaving(false));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [note, orderId]);
 
   const handleFieldChange = (field: string, value: unknown) => {
     setEditedFields((prev) => ({ ...prev, [field]: value }));
@@ -342,6 +358,18 @@ export default function OrderDetail() {
                 rows={2}
                 defaultValue={order?.comment}
                 onChange={(e) => handleFieldChange('comment', e.target.value)}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label="Заметки для продавцов"
+                fullWidth
+                size="small"
+                multiline
+                rows={3}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                helperText={noteSaving ? 'Сохранение...' : ''}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
