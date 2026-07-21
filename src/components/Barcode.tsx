@@ -23,7 +23,20 @@ export default function Barcode({ value, width = 1.2, height = 36 }: Props) {
           margin: 0,
           background: 'transparent',
         });
-      } catch {}
+      } catch {
+        try {
+          JsBarcode(ref.current, value, {
+            format: 'CODE128',
+            width,
+            height,
+            displayValue: true,
+            fontSize: 12,
+            textMargin: 2,
+            margin: 0,
+            background: 'transparent',
+          });
+        } catch {}
+      }
     }
   }, [value, width, height]);
 
