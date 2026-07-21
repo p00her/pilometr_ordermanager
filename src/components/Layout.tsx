@@ -23,7 +23,6 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
@@ -65,30 +64,11 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          minHeight: { xs: 56, sm: 64 },
-          px: sidebarCollapsed ? 0 : 2,
-        }}
-      >
-        {sidebarCollapsed ? (
-          <IconButton onClick={() => setSidebarCollapsed(false)}>
-            <ChevronRightIcon />
-          </IconButton>
-        ) : (
-          <>
-            <Typography variant="h6" noWrap>
-              Магазины
-            </Typography>
-            <IconButton onClick={() => setSidebarCollapsed(true)}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </>
-        )}
-      </Box>
+      <Toolbar>
+        <Typography variant="h6" noWrap>
+          Магазины
+        </Typography>
+      </Toolbar>
       <List>
         {navItems.map((item) => (
           <ListItemButton
@@ -159,6 +139,15 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
           <IconButton
             color="inherit"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            title={sidebarCollapsed ? 'Развернуть панель' : 'Свернуть панель'}
+            sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+          >
+            <ChevronLeftIcon sx={{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </IconButton>
+
+          <IconButton
+            color="inherit"
             onClick={() => setMode(nextMode[mode])}
             title={`Тема: ${mode}`}
             sx={{ borderRadius: 1, gap: 0.5 }}
@@ -205,7 +194,6 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
                 sx: {
                   width: sidebarCollapsed ? 64 : 260,
                   transition: 'width 0.2s ease',
-                  overflowX: 'hidden',
                 },
               },
             }}
