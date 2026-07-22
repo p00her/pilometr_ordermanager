@@ -1098,12 +1098,12 @@ case 'getitemstorage':
 			//$select->where('delivery_id')->equals(array($_REQUEST[columns][5][search][value]));
 			//$select->where('status_id')->equals($_REQUEST[columns][6][search][value]);
 			//$select->where('payment_id')->equals(array($_REQUEST[columns][7][search][value]));
-			//$select->where('payment_status_id')->equals($_REQUEST[columns][8][search][value]);
+			//$select->where('payment_status_id')->equals(array($_REQUEST[columns][8][search][value]));
 
 
 			$order_c = 'id';
 
-			$select->order($order_c)->asc();
+			$select->order($order_c)->desc();
 			
 			$total = $select->length; $filtred = $select->length;
 					$result['recordsTotal'] =$total;
