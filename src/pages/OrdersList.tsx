@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material';
 import {
   Box,
   Typography,
@@ -8,6 +9,7 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  alpha,
   TableHead,
   TableRow,
   TableSortLabel,
@@ -57,6 +59,7 @@ function formatDate(iso: string): string {
 }
 
 export default function OrdersList() {
+  const theme = useTheme();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [page, setPage] = useState(0);
@@ -329,7 +332,7 @@ export default function OrdersList() {
             >
               {refData?.o_statuses &&
                 Object.entries(refData.o_statuses).map(([k, v]) => (
-                  <MenuItem key={k} value={k}>
+                  <MenuItem key={k} value={k} sx={{ bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined }}>
                     <Checkbox checked={filters.statusId.includes(k)} size="small" />
                     <ListItemText primary={v} />
                   </MenuItem>
