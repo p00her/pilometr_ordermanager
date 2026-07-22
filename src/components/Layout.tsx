@@ -91,7 +91,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             component="img"
             src="https://pilometr.ru/templates/pilometr/newfront/img/new_new/logo_white.svg"
             alt="Pilometr"
-            sx={{ height: 48 }}
+            sx={{ height: 60 }}
           />
         )}
       </Box>
