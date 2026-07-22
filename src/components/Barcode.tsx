@@ -19,7 +19,7 @@ export default function Barcode({ value, width = 2.4, height = 36 }: Props) {
         width,
         height,
         displayValue: true,
-        fontSize: 16,
+        fontSize: 18,
         textMargin: 2,
         margin: 0,
         background: 'transparent',
@@ -38,5 +38,5 @@ export default function Barcode({ value, width = 2.4, height = 36 }: Props) {
 
   if (!value) return <span>—</span>;
 
-  return <svg ref={ref} style={{ display: 'block', maxWidth: 360, height: 36 }} />;
+  return <svg ref={ref} style={{ display: 'block', maxWidth: 360, height: 36, letterSpacing: 4 }} />;
 }
