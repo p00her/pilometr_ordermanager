@@ -136,14 +136,17 @@ export default function OrdersList() {
       }
       setLoading(false);
 
+      const refPromise = axios.get('/api/reference').then(async (r) => {
+        const d = r.data;
+        if (d && typeof d === 'object' && d.o_statuses && Object.keys(d.o_statuses).length > 0) {
+          return d;
+        }
+        const live = await getReferenceData(API_URL);
+        axios.post('/api/reference', live).catch(() => {});
+        return live;
+      });
       Promise.all([
-        axios.get('/api/reference').then(async (r) => {
-          const d = r.data;
-          if (d && typeof d === 'object' && d.o_statuses && Object.keys(d.o_statuses).length > 0) {
-            return d;
-          }
-          return getReferenceData(API_URL);
-        }),
+        refPromise,
         getCachedOrders(),
       ]).then(async ([ref, data]) => {
         setRefData(ref && typeof ref === 'object' ? { o_statuses: ref.o_statuses ?? {}, d_methods: ref.d_methods ?? {}, d_statuses: ref.d_statuses ?? {}, p_methods: ref.p_methods ?? {}, p_statuses: ref.p_statuses ?? {} } : null);

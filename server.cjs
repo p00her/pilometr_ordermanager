@@ -285,7 +285,7 @@ app.post('/api/orders/sync', async (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/reference', async (_req, res) => {
+app.get('/api/reference', (_req, res) => {
   const stmt = db.prepare('SELECT value FROM cache WHERE key = ?');
   stmt.bind(['reference_data']);
   if (stmt.step()) {
@@ -294,21 +294,18 @@ app.get('/api/reference', async (_req, res) => {
     res.json(JSON.parse(val));
   } else {
     stmt.free();
-    try {
-      console.log('Reference cache miss, fetching live...');
-      const ref = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`, 15000);
-      console.log('Live reference fetched:', ref ? Object.keys(ref).join(',') : 'null');
-      if (ref) {
-        db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(ref), 0]);
-        saveDb();
-        res.json(ref);
-      } else {
-        res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
-      }
-    } catch (e) {
-      console.error('Reference fetch error:', e.message);
-      res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
-    }
+    res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
+  }
+});
+
+app.post('/api/reference', (req, res) => {
+  const data = req.body;
+  if (data && typeof data === 'object') {
+    db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(data), 0]);
+    saveDb();
+    res.json({ ok: true });
+  } else {
+    res.status(400).json({ error: 'invalid data' });
   }
 });
 
