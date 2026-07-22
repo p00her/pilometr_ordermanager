@@ -207,39 +207,6 @@ app.get('/api/orders', (req, res) => {
   res.json({ data: orders, lastSyncTime });
 });
 
-app.get('/api/debug/orders', (_req, res) => {
-  const stmt = db.prepare('SELECT id, updated_at FROM orders ORDER BY id');
-  const ids = [];
-  while (stmt.step()) ids.push(stmt.getAsObject());
-  stmt.free();
-  const ms = db.prepare('SELECT value FROM meta WHERE key = ?');
-  ms.bind(['lastSyncTime']);
-  let lastSyncTime = '';
-  if (ms.step()) lastSyncTime = ms.getAsObject().value;
-  ms.free();
-  res.json({ count: ids.length, ids, lastSyncTime });
-});
-
-app.get('/api/debug/php-orders', async (_req, res) => {
-  try {
-    const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=0&length=5&draw=0`);
-    res.json({ count: data && data.data ? data.data.length : 0, total: data ? data.recordsTotal : 0, sample: data && data.data ? data.data.slice(0, 2) : null, error: null });
-  } catch (e) {
-    res.json({ count: 0, total: 0, sample: null, error: e.message });
-  }
-});
-
-app.post('/api/orders/resync', async (_req, res) => {
-  db.run('DELETE FROM meta WHERE key = ?', ['lastSyncTime']);
-  saveDb();
-  await syncOrders();
-  const stmt = db.prepare('SELECT count(*) as cnt FROM orders');
-  stmt.step();
-  const cnt = stmt.getAsObject().cnt;
-  stmt.free();
-  res.json({ ok: true, count: cnt });
-});
-
 app.post('/api/orders/sync', async (_req, res) => {
   await syncOrders();
   res.json({ ok: true });
