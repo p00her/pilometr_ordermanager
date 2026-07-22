@@ -26,7 +26,7 @@ define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
 
 if ($data['key'] == '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f'){
 $mode = $data['mode'];
-$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify'];
+$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem'];
 if (!in_array($mode, $publicModes) && !isset($_SESSION['auth'])) {
     echo json_encode(['error' => 'auth_required']);
     exit;
@@ -713,19 +713,24 @@ case 'getstat':
 
 	
 	case 'getcatalogitem':
+	session_write_close();
+	$barcode = isset($_REQUEST['barcode']) ? $_REQUEST['barcode'] : '';
+	if (!$barcode) {
+		echo json_encode(array('error' => 'barcode required'));
+		break;
+	}
 	$select = new selector('objects');
 	$select->types('hierarchy-type')->name('catalog', 'object');
 	$select->option('no-length')->value(false);
 	$select->option('load-all-props')->value(true);
-	$select->where('bar_code')->equals($_REQUEST['barcode']);
+	$select->where('bar_code')->equals($barcode);
+	if (!isset($select->result[0])) {
+		http_response_code(404);
+		echo json_encode(array('error' => 'not found'));
+		break;
+	}
 	$obj = $select->result[0];
-	$response['name'] = $obj->name;
-	$response['item_id'] = $obj->id;
-	$selPage = new selector('pages');
-	$selPage->types('hierarchy-type')->name('catalog', 'object');
-	$selPage->where('object_id')->equals($obj->id);
-	$page = $selPage->result[0];
-
+	$response = array('name' => $obj->name, 'item_id' => $obj->id);
 	echo json_encode($response, JSON_UNESCAPED_UNICODE);
 	break;
 // для отправки в магазины
