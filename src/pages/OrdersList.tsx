@@ -28,7 +28,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getCachedOrders, triggerSync, getReferenceData, API_URL } from '../api/ordersApi';
-import { getAllOrders, replaceOrders, getMeta, setMeta } from '../db/db';
+import { getAllOrders, replaceOrders, mergeOrders, getMeta, setMeta } from '../db/db';
 import type { Order, ReferenceData } from '../types';
 
 const STATUS_COLORS: Record<string, 'info' | 'warning' | 'success' | 'error' | 'default'> = {
@@ -99,11 +99,10 @@ export default function OrdersList() {
     setSyncing(true);
     try {
       if (forceFull) await triggerSync();
-      const ls = await getMeta('lastSyncTime');
-      const data = await getCachedOrders(ls || undefined);
+      const data = await getCachedOrders(forceFull ? undefined : (await getMeta('lastSyncTime')) || undefined);
       if (data.data.length > 0) {
-        const replaced = await replaceOrders(data.data);
-        setOrders(replaced);
+        const merged = forceFull ? await replaceOrders(data.data) : await mergeOrders(data.data);
+        setOrders(merged);
       }
       if (data.lastSyncTime) {
         await setMeta('lastSyncTime', data.lastSyncTime);
