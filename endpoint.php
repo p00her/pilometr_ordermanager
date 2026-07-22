@@ -311,6 +311,25 @@ case 'register_chat':
 		);
 	}
 	maxSaveChats($chats);
+
+	// отправить новому пользователю уведомления о заказах за последние 24 часа со статусом «в работе»
+	$token = MAX_BOT_TOKEN;
+	if ($token && $chatId) {
+		$domainId = cmsController::getInstance()->getCurrentDomain()->getId();
+		$sel = new selector('objects');
+		$sel->types('hierarchy-type')->name('emarket', 'order');
+		$sel->option('no-length')->value(false);
+		$sel->option('load-all-props')->value(true);
+		$sel->where('domain_id')->equals($domainId);
+		$sel->where('status_id')->equals(array(97, 99, 100, 101));
+		$sel->where('order_date')->eqmore(time() - 86400);
+		$d_methods = array(); $p_methods = array(); $p_statuses = array(); $o_statuses = array();
+		foreach ($sel->result as $order) {
+			$text = maxBuildOrderText($order, $d_methods, $p_methods, $p_statuses, $o_statuses, '🆕 <b>Новый заказ</b>');
+			maxSendMessage($token, $chatId, $text);
+		}
+	}
+
 	echo json_encode(['ok' => true]);
 	break;
 
@@ -436,10 +455,10 @@ case 'auto_notify':
 	$sel->where('domain_id')->equals($domainId);
 	$sel->where('status_id')->equals(array(97, 99, 100, 101, 98, 102, 95, 96));
 	if ($lastCheck > 0) {
-		$sel->where('order_date')->eqmore($lastCheck);
+		$sel->where('status_change_date')->eqmore($lastCheck);
 	} else {
 		// первый запуск — только за последние 2 часа
-		$sel->where('order_date')->eqmore(time() - 7200);
+		$sel->where('status_change_date')->eqmore(time() - 7200);
 	}
 
 	$sent = 0;
