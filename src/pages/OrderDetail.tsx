@@ -407,7 +407,7 @@ export default function OrderDetail() {
                 >
                   {refData?.o_statuses &&
                     Object.entries(refData.o_statuses).map(([k, v]) => (
-                      <MenuItem key={k} value={Number(k)} sx={{ bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined }}>
+                      <MenuItem key={k} value={Number(k)} sx={{ bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined, '&.Mui-selected': { bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined } }}>
                         {v}
                       </MenuItem>
                     ))}
