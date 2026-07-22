@@ -168,7 +168,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             backgroundImage: 'none',
           }}
         >
-          <Toolbar>
+          <Toolbar sx={{ minHeight: { xs: 56, sm: 56 } }}>
             <IconButton
               color="inherit"
               edge="start"
