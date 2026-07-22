@@ -295,7 +295,9 @@ app.get('/api/reference', async (_req, res) => {
   } else {
     stmt.free();
     try {
-      const ref = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`);
+      console.log('Reference cache miss, fetching live...');
+      const ref = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`, 15000);
+      console.log('Live reference fetched:', ref ? Object.keys(ref).join(',') : 'null');
       if (ref) {
         db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(ref), 0]);
         saveDb();
@@ -303,7 +305,8 @@ app.get('/api/reference', async (_req, res) => {
       } else {
         res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
       }
-    } catch {
+    } catch (e) {
+      console.error('Reference fetch error:', e.message);
       res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
     }
   }
@@ -343,6 +346,26 @@ app.get('*path', (_req, res) => {
 
 (async () => {
   await initDb();
+
+  try {
+    const cached = db.prepare('SELECT value FROM cache WHERE key = ?');
+    cached.bind(['reference_data']);
+    if (!cached.step()) {
+      cached.free();
+      console.log('Pre-warming reference cache...');
+      const ref = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`, 15000);
+      if (ref) {
+        db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(ref), 0]);
+        saveDb();
+        console.log('Reference cache pre-warmed');
+      }
+    } else {
+      cached.free();
+    }
+  } catch (e) {
+    console.error('Reference pre-warm error:', e.message);
+  }
+
   if (getMeta('fullSyncDone') !== '1') {
     fullSync().then(() => {
       syncOrders().catch(() => {});
