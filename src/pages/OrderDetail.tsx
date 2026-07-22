@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -26,8 +26,6 @@ import {
   DialogActions,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PrintIcon from '@mui/icons-material/Print';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
 import Barcode from '../components/Barcode';
@@ -44,12 +42,10 @@ import {
 } from '../api/ordersApi';
 import { sendMaxNotification } from '../api/maxApi';
 import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
-import { getNote as apiGetNote, saveNote as apiSaveNote } from '../api/notesApi';
 import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const orderId = Number(id);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -68,9 +64,7 @@ export default function OrderDetail() {
   const [editedFields, setEditedFields] = useState<Record<string, unknown>>({});
   const [maxSending, setMaxSending] = useState(false);
   const [maxSent, setMaxSent] = useState(false);
-  const [note, setNote] = useState('');
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [noteTimer, setNoteTimer] = useState(0);
+
 
   const storageKeys = useMemo(() => {
     const did = Number(order?.delivery_id);
@@ -160,40 +154,7 @@ export default function OrderDetail() {
     }).catch(() => setLoadingStorage(false));
   }, [orderId, items.length > 0]);
 
-  useEffect(() => {
-    apiGetNote(orderId).then((text) => {
-      setNote(text);
-      savedNoteRef.current = text;
-      noteLoadedRef.current = true;
-    });
-  }, [orderId]);
 
-  const NOTE_DELAY = 5;
-  const savedNoteRef = useRef('');
-  const noteLoadedRef = useRef(false);
-
-  const saveNoteLocally = useCallback(async (text: string) => {
-    setNoteSaving(true);
-    await apiSaveNote(orderId, text);
-    savedNoteRef.current = text;
-    setNoteSaving(false);
-    setNoteTimer(0);
-  }, [orderId]);
-
-  useEffect(() => {
-    if (noteTimer > 0) {
-      const tick = setTimeout(() => setNoteTimer((t) => t - 1), 1000);
-      return () => clearTimeout(tick);
-    }
-  }, [noteTimer]);
-
-  useEffect(() => {
-    if (!noteLoadedRef.current) return;
-    if (note === savedNoteRef.current) return;
-    setNoteTimer(NOTE_DELAY);
-    const timer = setTimeout(() => saveNoteLocally(note), NOTE_DELAY * 1000);
-    return () => clearTimeout(timer);
-  }, [note, saveNoteLocally]);
 
   const handleFieldChange = (field: string, value: unknown) => {
     setEditedFields((prev) => ({ ...prev, [field]: value }));
@@ -344,17 +305,9 @@ export default function OrderDetail() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <IconButton onClick={() => navigate('/orders')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" sx={{ flexGrow: 1 }}>
-          Заказ №{order?.number} (ID: {orderId})
-        </Typography>
-        <IconButton onClick={() => window.print()} title="Печать">
-          <PrintIcon />
-        </IconButton>
-      </Box>
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        Заказ №{order?.number}
+      </Typography>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -503,17 +456,28 @@ export default function OrderDetail() {
         </Paper>
       </Box>
 
-      <Box className="print-only" sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Основные данные</Typography>
-        <Typography>Заказ №{order?.number} (ID: {orderId})</Typography>
-        <Typography>Получатель: {order?.poluchatel || '—'}</Typography>
-        <Typography>Телефон: {order?.mobtelefon || '—'}</Typography>
-        <Typography>E-mail: {order?.email || '—'}</Typography>
-        <Typography>Статус заказа: {refData?.o_statuses[order?.status_id ?? -1] || '—'}</Typography>
-        <Typography>Способ получения: {refData?.d_methods[order?.delivery_id ?? -1] || '—'}</Typography>
-        <Typography>Способ оплаты: {refData?.p_methods[order?.payment_id ?? -1] || '—'}</Typography>
-        <Typography>Статус оплаты: {refData?.p_statuses[order?.payment_status_id ?? -1] || '—'}</Typography>
-        <Typography>Комментарий: {order?.comment || '—'}</Typography>
+      <Box className="print-only" sx={{ mb: 3, fontSize: '0.75rem' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 24px' }}>
+          <Typography sx={{ fontSize: 'inherit' }}>Получатель: {order?.poluchatel || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Телефон: {order?.mobtelefon || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>E-mail: {order?.email || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Статус заказа: {refData?.o_statuses[order?.status_id ?? -1] || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Способ получения: {refData?.d_methods[order?.delivery_id ?? -1] || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Способ оплаты: {refData?.p_methods[order?.payment_id ?? -1] || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Статус оплаты: {refData?.p_statuses[order?.payment_status_id ?? -1] || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Комментарий: {order?.comment || '—'}</Typography>
+        </Box>
+
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography sx={{ fontSize: 'inherit', mb: 4 }}>Дата: _________________</Typography>
+            <Typography sx={{ fontSize: 'inherit' }}>Подпись: _______________</Typography>
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 'inherit', mb: 4 }}>Дата: _________________</Typography>
+            <Typography sx={{ fontSize: 'inherit' }}>Подпись: _______________</Typography>
+          </Box>
+        </Box>
       </Box>
 
         <Paper elevation={2} sx={{ p: { xs: 1, sm: 2, md: 3 }, mb: 3 }}>
@@ -636,39 +600,7 @@ export default function OrderDetail() {
         </TableContainer>
       </Paper>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Заметки. Не видны покупателям
-        </Typography>
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          rows={3}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => saveNoteLocally(note)}
-            disabled={noteSaving || note === savedNoteRef.current}
-          >
-            {noteSaving ? 'Сохранение...' : 'Сохранить заметку'}
-          </Button>
-          {noteTimer > 0 && (
-            <Typography variant="caption" color="text.secondary">
-              Автосохранение через {noteTimer}с
-            </Typography>
-          )}
-          {noteSaving && noteTimer === 0 && (
-            <Typography variant="caption" color="text.secondary">
-              Сохранено
-            </Typography>
-          )}
-        </Box>
-      </Paper>
+
 
       <Dialog
         open={addDialogOpen}
