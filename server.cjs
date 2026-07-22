@@ -1,5 +1,5 @@
 const express = require('express');
-const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
+const { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } = require('fs');
 const https = require('https');
 const path = require('path');
 const initSqlJs = require('sql.js');
@@ -222,7 +222,12 @@ app.get('*path', (_req, res) => {
   await initDb();
   syncOrders();
   setInterval(syncOrders, 30000);
-  const certPath = path.join(CERT_DIR, 'live', 'npm-1');
+  const liveDir = path.join(CERT_DIR, 'live');
+  let certPath = '';
+  if (existsSync(liveDir)) {
+    const dirs = readdirSync(liveDir).filter(d => d.startsWith('npm-'));
+    certPath = dirs.length > 0 ? path.join(liveDir, dirs[0]) : '';
+  }
   const hasCerts = existsSync(path.join(certPath, 'fullchain.pem'));
   if (hasCerts) {
     https.createServer({
