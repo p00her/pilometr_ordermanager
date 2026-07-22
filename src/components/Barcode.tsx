@@ -8,7 +8,7 @@ interface Props {
   height?: number;
 }
 
-export default function Barcode({ value, width = 1.6, height = 24 }: Props) {
+export default function Barcode({ value, width = 2.4, height = 36 }: Props) {
   const ref = useRef<SVGSVGElement>(null);
   const theme = useTheme();
   const color = theme.palette.mode === 'dark' ? '#fff' : '#000';
@@ -38,5 +38,5 @@ export default function Barcode({ value, width = 1.6, height = 24 }: Props) {
 
   if (!value) return <span>—</span>;
 
-  return <svg ref={ref} style={{ display: 'block', maxWidth: 240, height: 24 }} />;
+  return <svg ref={ref} style={{ display: 'block', maxWidth: 360, height: 36 }} />;
 }
