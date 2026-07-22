@@ -73,7 +73,10 @@ export default function OrderDetail() {
   const [maxSending, setMaxSending] = useState(false);
   const [maxSent, setMaxSent] = useState(false);
   const [note, setNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteCountdown, setNoteCountdown] = useState(0);
   const noteTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const noteCountdownRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const storageKeys = useMemo(() => {
     const did = Number(order?.delivery_id);
@@ -129,12 +132,28 @@ export default function OrderDetail() {
     }).catch(() => {});
   }, [orderId]);
 
+  const doSaveNote = async () => {
+    setNoteSaving(true);
+    try { await saveNote(orderId, note); } catch {}
+    setNoteSaving(false);
+    setNoteCountdown(0);
+    if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
+  };
+
   useEffect(() => {
     if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
+    setNoteCountdown(5);
+    noteCountdownRef.current = setInterval(() => {
+      setNoteCountdown((c) => Math.max(0, c - 1));
+    }, 1000);
     noteTimerRef.current = setTimeout(() => {
-      saveNote(orderId, note).catch(() => {});
+      doSaveNote();
     }, 5000);
-    return () => { if (noteTimerRef.current) clearTimeout(noteTimerRef.current); };
+    return () => {
+      if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+      if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
+    };
   }, [note, orderId]);
 
   useEffect(() => {
@@ -498,22 +517,6 @@ export default function OrderDetail() {
         </Paper>
       </Box>
 
-      <Box className="no-print" sx={{ mb: 3 }}>
-        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" gutterBottom>Заметка</Typography>
-          <TextField
-            fullWidth
-            multiline
-            minRows={2}
-            maxRows={6}
-            size="small"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Заметка к заказу..."
-          />
-        </Paper>
-      </Box>
-
       <Box className="print-only" sx={{ mb: 3, fontSize: '0.75rem' }}>
         <Typography variant="h6" sx={{ fontSize: '1rem', mb: 1 }}>Заказ №{order?.number}</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 24px' }}>
@@ -684,6 +687,32 @@ export default function OrderDetail() {
       <Box className="print-only" sx={{ mt: 4, textAlign: 'right' }}>
         <Typography sx={{ fontSize: '0.75rem', display: 'inline', mr: 16 }}>Дата: {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(' г.', '')} {new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</Typography>
         <Typography sx={{ fontSize: '0.75rem', display: 'inline' }}>Подпись: _______________</Typography>
+      </Box>
+
+      <Box className="no-print" sx={{ mb: 3 }}>
+        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>Заметка</Typography>
+            {noteCountdown > 0 && (
+              <Typography variant="caption" color="text.secondary">
+                Автосохранение через {noteCountdown}с
+              </Typography>
+            )}
+            <Button variant="contained" size="small" onClick={doSaveNote} disabled={noteSaving}>
+              {noteSaving ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </Box>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={6}
+            size="small"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Заметка к заказу..."
+          />
+        </Paper>
       </Box>
 
       <Dialog
