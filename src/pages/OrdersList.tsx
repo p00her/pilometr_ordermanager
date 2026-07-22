@@ -73,7 +73,7 @@ export default function OrdersList() {
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   const [sortField, setSortField] = useState<'number' | 'order_date'>('number');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const [filters, setFilters] = useState({
     number: '',
