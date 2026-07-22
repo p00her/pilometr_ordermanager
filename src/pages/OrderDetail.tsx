@@ -39,10 +39,10 @@ import {
   setItemAmount,
   appendItems,
   getCatalogItem,
-  getReferenceData,
-  API_URL,
 } from '../api/ordersApi';
 import { sendMaxNotification } from '../api/maxApi';
+import axios from 'axios';
+const API_URL = '/endpoint.php';
 import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
 import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
 
@@ -112,9 +112,13 @@ export default function OrderDetail() {
         try { setRefData(JSON.parse(cached)); } catch {}
       }
     });
-    getReferenceData(API_URL).then((ref) => {
-      setRefData(ref);
-      setMeta('refData', JSON.stringify(ref));
+    axios.get('/api/reference').then((r) => {
+      const ref = r.data;
+      const safe = ref && typeof ref === 'object' ? { o_statuses: ref.o_statuses ?? {}, d_methods: ref.d_methods ?? {}, d_statuses: ref.d_statuses ?? {}, p_methods: ref.p_methods ?? {}, p_statuses: ref.p_statuses ?? {} } : null;
+      if (safe) {
+        setRefData(safe);
+        setMeta('refData', JSON.stringify(safe));
+      }
     }).catch(() => {});
   }, [orderId]);
 

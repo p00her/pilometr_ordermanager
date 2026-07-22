@@ -140,7 +140,7 @@ export default function OrdersList() {
         axios.get('/api/reference').then(r => r.data),
         getCachedOrders(),
       ]).then(async ([ref, data]) => {
-        setRefData(ref);
+        setRefData(ref && typeof ref === 'object' ? { o_statuses: ref.o_statuses ?? {}, d_methods: ref.d_methods ?? {}, d_statuses: ref.d_statuses ?? {}, p_methods: ref.p_methods ?? {}, p_statuses: ref.p_statuses ?? {} } : null);
         if (data.data.length > 0) {
           const replaced = await replaceOrders(data.data);
           setOrders(replaced);
