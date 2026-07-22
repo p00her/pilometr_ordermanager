@@ -599,7 +599,7 @@ export default function OrderDetail() {
       </Paper>
 
       <Box className="print-only" sx={{ mt: 4, display: 'flex', gap: 12 }}>
-        <Typography sx={{ fontSize: '0.75rem' }}>Дата: _________________</Typography>
+        <Typography sx={{ fontSize: '0.75rem' }}>Дата: {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(' г.', '')} {new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</Typography>
         <Typography sx={{ fontSize: '0.75rem' }}>Подпись: _______________</Typography>
       </Box>
 
