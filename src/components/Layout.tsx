@@ -83,8 +83,8 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
         justifyContent: sidebarCollapsed ? 'center' : undefined,
         bgcolor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
       }}>
-        <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: '#fff' }}>
-          {sidebarCollapsed ? <MenuIcon /> : <MenuOpenIcon />}
+        <IconButton onClick={() => isMobile ? setMobileOpen(false) : setSidebarCollapsed((c) => !c)} sx={{ color: '#fff' }}>
+          {isMobile ? <MenuIcon /> : sidebarCollapsed ? <MenuIcon /> : <MenuOpenIcon />}
         </IconButton>
         {!sidebarCollapsed && (
           <Box
