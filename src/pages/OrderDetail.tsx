@@ -498,7 +498,7 @@ export default function OrderDetail() {
               Добавить товар
             </Button>
           </Box>
-          <Typography variant="h6" className="print-only" sx={{ mb: 2 }}>Товары в заказе</Typography>
+          <Typography variant="h6" className="print-only" sx={{ fontSize: '0.85rem', mb: 0.5 }}>Товары в заказе</Typography>
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size="small">
               <TableHead>
@@ -515,10 +515,10 @@ export default function OrderDetail() {
               <TableBody>
                 {items.map((item, idx) => (
                   <TableRow key={idx}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.artikul ?? '—'}</TableCell>
-                    <TableCell><Barcode value={item.bar_code ?? ''} /></TableCell>
-                    <TableCell>
+                    <TableCell className="print-smaller">{item.name}</TableCell>
+                    <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.artikul ?? '—'}</TableCell>
+                    <TableCell className="print-smaller"><Barcode value={item.bar_code ?? ''} /></TableCell>
+                    <TableCell className="print-smaller">
                       <span className="no-print">
                         <TextField
                           type="number"
@@ -533,7 +533,7 @@ export default function OrderDetail() {
                       </span>
                       <span className="print-only">{item.amount}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="print-smaller">
                       {item.price.toLocaleString('ru-RU', {
                         style: 'currency',
                         currency: 'RUB',
@@ -598,8 +598,8 @@ export default function OrderDetail() {
         </TableContainer>
       </Paper>
 
-      <Box className="print-only" sx={{ mt: 6 }}>
-        <Typography sx={{ fontSize: '0.75rem', mb: 5 }}>Дата: _________________</Typography>
+      <Box className="print-only" sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+        <Typography sx={{ fontSize: '0.75rem' }}>Дата: _________________</Typography>
         <Typography sx={{ fontSize: '0.75rem' }}>Подпись: _______________</Typography>
       </Box>
 

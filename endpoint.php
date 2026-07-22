@@ -1077,7 +1077,6 @@ case 'getitemstorage':
 			$select->where('total_price')->notequals(0);
 			$select->where('name')->isNull(false);
 			$select->where('domain_id')->equals($domainId);
-			$select->where('number')->eqmore(19300);
 			if (isset($_REQUEST['modified_since']) && $_REQUEST['modified_since'] != '') {
 			$select->where('status_change_date')->eqmore(strtotime($_REQUEST['modified_since']));
 			}
