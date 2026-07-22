@@ -330,7 +330,7 @@ export default function OrdersList() {
             >
               {refData?.o_statuses &&
                 Object.entries(refData.o_statuses).map(([k, v]) => (
-                  <MenuItem key={k} value={k} sx={{ bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined }}>
+                  <MenuItem key={k} value={k} sx={{ bgcolor: v.toLowerCase().includes('оплачивается') ? alpha(theme.palette.info.main, 0.12) : STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined }}>
                     <Checkbox checked={filters.statusId.includes(k)} size="small" />
                     <ListItemText primary={v} />
                   </MenuItem>
@@ -444,7 +444,7 @@ export default function OrdersList() {
                             label={label}
                             size="small"
                             color={isOrderPaying ? 'default' : (STATUS_COLORS[String(sid)] ?? 'default')}
-                            style={isOrderPaying ? { backgroundColor: '#636B2F', color: '#fff', fontWeight: 600 } : undefined}
+                            style={isOrderPaying ? { backgroundColor: theme.palette.info.main, color: '#fff', fontWeight: 600 } : undefined}
                             sx={{
                               whiteSpace: 'normal',
                               height: 'auto',

@@ -430,20 +430,22 @@ export default function OrderDetail() {
                   }
                   renderValue={(v) => {
                     const val = v as number;
-                    const c = STATUS_COLORS[String(val)];
+                    const label = refData?.o_statuses[val] || '';
+                    const isPaying = label.toLowerCase().includes('оплачивается');
+                    const c = isPaying ? 'info' as const : STATUS_COLORS[String(val)];
                     return (
                       <Box sx={{
                         display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
                         bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
                       }}>
-                        {refData?.o_statuses[val] || '—'}
+                        {label || '—'}
                       </Box>
                     );
                   }}
                 >
                   {refData?.o_statuses &&
                     Object.entries(refData.o_statuses).map(([k, v]) => (
-                      <MenuItem key={k} value={Number(k)} sx={{ bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined, '&.Mui-selected': { bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined } }}>
+                      <MenuItem key={k} value={Number(k)} sx={{ bgcolor: v.toLowerCase().includes('оплачивается') ? alpha(theme.palette.info.main, 0.12) : STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined, '&.Mui-selected': { bgcolor: v.toLowerCase().includes('оплачивается') ? alpha(theme.palette.info.main, 0.12) : STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined } }}>
                         {v}
                       </MenuItem>
                     ))}
@@ -532,13 +534,15 @@ export default function OrderDetail() {
           <Typography sx={{ fontSize: 'inherit' }}>
             Статус заказа:{' '}
             {(function() {
-              const c = STATUS_COLORS[String(order?.status_id ?? '')];
+              const label = refData?.o_statuses[order?.status_id ?? -1] || '';
+              const isPaying = label.toLowerCase().includes('оплачивается');
+              const c = isPaying ? 'info' as const : STATUS_COLORS[String(order?.status_id ?? '')];
               return (
                 <Box component="span" sx={{
                   display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
                   bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
                 }}>
-                  {refData?.o_statuses[order?.status_id ?? -1] || '—'}
+                  {label || '—'}
                 </Box>
               );
             })()}
@@ -548,13 +552,15 @@ export default function OrderDetail() {
           <Typography sx={{ fontSize: 'inherit' }}>
             Статус оплаты:{' '}
             {(function() {
-              const c = STATUS_COLORS[String(order?.payment_status_id ?? '')];
+              const label = refData?.p_statuses[order?.payment_status_id ?? -1] || '';
+              const isPaying = label.toLowerCase().includes('оплачивается');
+              const c = isPaying ? 'info' as const : STATUS_COLORS[String(order?.payment_status_id ?? '')];
               return (
                 <Box component="span" sx={{
                   display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
                   bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
                 }}>
-                  {refData?.p_statuses[order?.payment_status_id ?? -1] || '—'}
+                  {label || '—'}
                 </Box>
               );
             })()}
