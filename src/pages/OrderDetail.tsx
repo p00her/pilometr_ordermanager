@@ -480,13 +480,9 @@ export default function OrderDetail() {
           <Typography sx={{ fontSize: 'inherit' }}>Комментарий: {order?.comment || '—'}</Typography>
         </Box>
 
-        <Box sx={{ mt: 6 }}>
-          <Typography sx={{ fontSize: 'inherit', mb: 5 }}>Дата: _________________</Typography>
-          <Typography sx={{ fontSize: 'inherit' }}>Подпись: _______________</Typography>
-        </Box>
       </Box>
 
-        <Paper elevation={2} sx={{ p: { xs: 1, sm: 2, md: 3 }, mb: 3 }}>
+      <Paper elevation={2} sx={{ p: { xs: 1, sm: 2, md: 3 }, mb: 3 }} className="print-order-paper">
           <Box className="no-print"
             sx={{
               display: 'flex',
@@ -507,13 +503,11 @@ export default function OrderDetail() {
           <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Название</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Артикул</TableCell>
-                  <TableCell>Штрихкод</TableCell>
-                  <TableCell>Кол-во</TableCell>
-                  <TableCell>Цена</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Вес</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Объем</TableCell>
+                  <TableCell className="print-smaller">Название</TableCell>
+                  <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Артикул</TableCell>
+                  <TableCell className="print-smaller">Штрихкод</TableCell>
+                  <TableCell className="print-smaller">Кол-во</TableCell>
+                  <TableCell className="print-smaller">Цена</TableCell>
                   <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Остатки</TableCell>
                   <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Действия</TableCell>
                 </TableRow>
@@ -545,9 +539,7 @@ export default function OrderDetail() {
                         currency: 'RUB',
                       })}
                     </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.weight ?? '—'}</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.volume ?? '—'}</TableCell>
-                    <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     {loadingStorage ? (
                       <CircularProgress size={16} />
                     ) : storageKeys.length > 0 && (
@@ -606,7 +598,10 @@ export default function OrderDetail() {
         </TableContainer>
       </Paper>
 
-
+      <Box className="print-only" sx={{ mt: 6 }}>
+        <Typography sx={{ fontSize: '0.75rem', mb: 5 }}>Дата: _________________</Typography>
+        <Typography sx={{ fontSize: '0.75rem' }}>Подпись: _______________</Typography>
+      </Box>
 
       <Dialog
         open={addDialogOpen}

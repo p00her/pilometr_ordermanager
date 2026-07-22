@@ -38,6 +38,10 @@ body {
   .hide-print-col {
     display: none !important;
   }
+  .print-smaller {
+    font-size: 0.7rem !important;
+    padding: 2px 4px !important;
+  }
   .MuiChip-root {
     display: inline-flex !important;
   }
