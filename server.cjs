@@ -285,7 +285,7 @@ app.post('/api/orders/sync', async (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/reference', (_req, res) => {
+app.get('/api/reference', async (_req, res) => {
   const stmt = db.prepare('SELECT value FROM cache WHERE key = ?');
   stmt.bind(['reference_data']);
   if (stmt.step()) {
@@ -294,7 +294,18 @@ app.get('/api/reference', (_req, res) => {
     res.json(JSON.parse(val));
   } else {
     stmt.free();
-    res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
+    try {
+      const ref = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`);
+      if (ref) {
+        db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(ref), 0]);
+        saveDb();
+        res.json(ref);
+      } else {
+        res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
+      }
+    } catch {
+      res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
+    }
   }
 });
 
