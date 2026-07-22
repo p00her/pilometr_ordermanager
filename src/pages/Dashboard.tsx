@@ -15,6 +15,7 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import { getStats, API_URL } from '../api/ordersApi';
 import type { StatsResponse } from '../types';
@@ -41,32 +42,43 @@ const GROUP_LABELS: Record<string, string> = {
   cancelled: 'Отменённые',
 };
 
+const GROUP_STATUSES: Record<string, string[]> = {
+  in_progress: ['Оплачивается', 'Ожидает проверки'],
+  ready: ['Принят', 'Готов к выдаче'],
+  closed: ['Отправлен', 'Завершен'],
+  cancelled: ['Отменен', 'Отклонен'],
+};
+
 function StatCard({
   title,
   data,
   color,
+  statuses,
 }: {
   title: string;
   data: { total: number; total_order_price: number; total_weight: number; total_volume: number };
   color: string;
+  statuses: string[];
 }) {
   return (
     <Card sx={{ borderLeft: 4, borderColor: color }} elevation={2}>
-      <CardContent>
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          {title}
-        </Typography>
-        <Typography variant="h5">{data.total}</Typography>
-        <Typography variant="body2">
-          Сумма: {formatPrice(data.total_order_price)}
-        </Typography>
-        <Typography variant="body2">
-          Вес: {data.total_weight.toFixed(2)} кг
-        </Typography>
-        <Typography variant="body2">
-          Объем: {data.total_volume.toFixed(3)} м³
-        </Typography>
-      </CardContent>
+      <Tooltip title={statuses.join(', ')} arrow placement="top">
+        <CardContent>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            {title}
+          </Typography>
+          <Typography variant="h5">{data.total}</Typography>
+          <Typography variant="body2">
+            Сумма: {formatPrice(data.total_order_price)}
+          </Typography>
+          <Typography variant="body2">
+            Вес: {data.total_weight.toFixed(2)} кг
+          </Typography>
+          <Typography variant="body2">
+            Объем: {data.total_volume.toFixed(3)} м³
+          </Typography>
+        </CardContent>
+      </Tooltip>
     </Card>
   );
 }
@@ -152,6 +164,7 @@ export default function Dashboard() {
                   title={GROUP_LABELS[g]}
                   data={stats.total[g] ?? { total: 0, total_order_price: 0, total_weight: 0, total_volume: 0 }}
                   color={`${GROUP_COLORS[g]}.main`}
+                  statuses={GROUP_STATUSES[g]}
                 />
               </Grid>
             ))}

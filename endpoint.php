@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 define('MAX_BOT_TOKEN', 'f9LHodD0cOLNuE8CpVmrSC6JSOICTHGZo8gHWKLDtjxxUPKBx7i6ZhyANDJy0oUn1VxR9M1ETSdoICfTCc8V');
 define('MAX_CHATS_FILE', __DIR__ . '/max_chats.json');
 define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
-
 // ====== КОНЕЦ MAX ======
 
 if ($data['key'] == '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f'){
@@ -37,11 +36,6 @@ if (!in_array($mode, $publicModes) && !isset($_SESSION['auth'])) {
 $typesCollection = umiObjectTypesCollection::getInstance();
 $objectsCollection = umiObjectsCollection::getInstance();
 $hierarchy = umiHierarchy::getInstance();
-$emarket = cmsController::getInstance()->getModule("emarket");
-
-//ПОЛЬЗОВАТЕЛИ
-$typeId = $typesCollection->getBaseType('users', 'user');
-$users = $objectsCollection->getGuidedItems($typeId);
 
 //ОБЪЕКТЫ, ЗАКАЗ, АДРЕС
 if($data['order_id']){
@@ -556,141 +550,6 @@ case 'auto_notify':
 	maxSaveNotified(array('notified' => $newNotified, 'last_check' => $now));
 	echo json_encode(['ok' => true, 'sent' => $sent, 'total' => count($chats)]);
 	break;
-// ====== КОНЕЦ MAX ======	
-	
-	
-	case 'alldost':
-	$domainId = cmsController::getInstance()->getCurrentDomain()->getId();
-	$show_closed = 1;
-			$select = new selector('objects');
-			$select->types('hierarchy-type')->name('emarket', 'order');
-			$select->option('no-length')->value(false);
-			$select->option('load-all-props')->value(true);
-			$select->limit($_REQUEST['start'],$_REQUEST['length']);
-			$select->where('total_price')->notequals(0);
-			$select->where('name')->isNull(false);
-			$select->where('domain_id')->equals($domainId);
-			$select->where('delivery_id')->equals(array(1279106));
-			if($_GET['show_closed']==0){
-			$select->where('status_id')->equals(array(97,99,100,101,98,4735558));
-			$select->where('number')->eqmore(15500);
-			}
-			else {
-			$select->where('status_id')->equals(array(97,99,100,101,102,98,4735558));
-			$select->where('number')->eqmore(10000);
-			}
-//			$select->where('payment_id')->equals(array());
-//			$select->where('payment_status_id')->equals(array());
-
-			$total = $select->length; $filtred = $select->length;
-					$result['recordsTotal'] =$total;
-					$result['o_statuses']=$o_statuses;
-					$result['p_statuses']=$p_statuses;
-					$result['d_methods']=$d_methods;
-					$result['p_methods']=$p_methods;
-					$result['type']="FeatureCollection";
-					$result['in_progress'] =0;
-					$result['closed'] =0;
-					$result['ready'] =0;
-					
-			$itemsArray = array();
-			foreach($select->result as $key=>$order) {
-				$order_data='';
-				$item = array(
-					'attribute:id' => $order->id,
-					'attribute:name' => $order->name,
-					'attribute:type-id' => $order->typeId,
-					'attribute:guid' => $order->GUID,
-					'attribute:type-guid' => $order->typeGUID,
-					'attribute:ownerId' => $order->ownerId,
-					'xlink:href' => $order->xlink,
-				);
-					$order_data['number'] = $order->number;
-					if ($order->order_date !='') $order_data['order_date']=$order->order_date->getFormattedDate('d.m.Y H:i'); else $order_data['order_date']= 'Не установлена';
-					if ($order->delivery_id){
-					$order_data['delivery_method'] = $d_methods[$order->delivery_id];
-					$order_data['r_weight'] = $order->r_weight;
-					$order_data['r_volume'] = $order->r_volume;
-					$order_data['poluchatel'] = $order->poluchatel;
-					$order_data['mobtelefon'] = $order->mobtelefon;
-					$order_data['delivery_price'] = $order->delivery_price;
-					if (null!==$order->getValue('delivery_aw_date')) $order_data['delivery_aw_date'] = $order->delivery_aw_date->getFormattedDate('d.m.Y H:i'); else $order_data['delivery_aw_date'] = "Не назначена";
-					}
-					foreach($order->order_items as $orderItem){
-					$item = $objectsCollection->getObject($orderItem);
-					$item_page= $item->item_link;
-					$page = $hierarchy->getElement($item_page[0]->id); 
-					if (!empty($orderItem)){
-						$it['name']=$item->name;
-						$it['amount']=$item->item_amount;
-						$it['price']=$item->item_price;
-						$it['id']=(int)$orderItem;
-						$it['volume']=$page->getValue('volume');
-						$it['width']=$page->getValue('shirina');
-						$it['height']=$page->getValue('tolshchina_mm');
-						$it['length']=$page->getValue('dlina');
-						$it['weight']=$page->getValue('weight');
-						if($page) $it['bar_code']=$page->getValue('bar_code');
-						if($page) $it['artikul']=$page->getValue('artikul');
-						$order_data['items'][] = $it;
-					}
-					}
-					
-					$order_data['price']=$order->getValue('total_price');
-
-					if ($order->delivery_address)
-					{
-						$address_object = $objectsCollection->getObject($order->delivery_address);
-
-						$order_data['address']=$address_object->getValue('adres');
-						$order_data['comment']=$address_object->getValue('comment');
-						$order_data['finish_point']=$address_object->getValue('point_coords');
-						$order_data['start_point']=$address_object->getValue('start_point');
-					}
-					if ($order->status_id)
-					{
-
-						$order_data['order_status']=$o_statuses[$order->status_id];
-					}
-					else $order_data['order_status'] = 'Не установлен';
-
-					if($order->payment_status_id)
-					{
-						$order_data['payment_status']=$p_statuses[$order->payment_status_id];
-					}
-					else $order_data['payment_status'] = "Не установлен";
-					
-					if($order->payment_status_id) $order_data['payment_method'] = $p_methods[$order->payment_id]; else $order_data['payment_method'] = "Не выбран";
-					$order_data['id'] = $order->id;
-					
-					$feature['type']= "Feature";
-					$feature['id']= $key;
-					if ($order_data['delivery_aw_date'] !='Не назначена') $feature['properties']['iconCaption']= date('d.m.Y', strtotime($order_data['delivery_aw_date'])); else $feature['properties']['iconCaption'] = '';
-					$feature['geometry']['type'] = "Point";
-					$feature['geometry']['coordinates']= explode(',',$order_data['finish_point']);
-					$feature['properties']['balloonContentHeader'] = $order->name." от ".$order_data['order_date'];
-					$feature['properties']['balloonContentBody'] = "<span style='font-size:small'>".$order_data['address']."</span><br>".$order_data['poluchatel'].", Тел.:".$order_data['mobtelefon']."";
-					$feature['properties']['balloonContentFooter']= "Дата доставки: ".$order_data['delivery_aw_date'].". Объем: ".$order_data['r_volume']." м<sup>3</sup>, Вес: ".$order_data['r_weight']." кг.<br>".$order_data['comment'];
-					$feature['properties']['clusterCaption'] = $order->name;
-					$feature['properties']['hintContent'] = "Дата доставки: ".$order_data['delivery_aw_date'].". Объем: ".$order_data['r_volume']." м<sup>3</sup>, Вес: ".$order_data['r_weight']." кг.";
-					if ($order->status_id == 98) { $result['in_progress']+=1; $feature['options']['preset'] = 'islands#blueStretchyIcon'; $feature['status']='in_progress';}
-					elseif($order->status_id == 99) { $result['closed']+=1; $feature['options']['preset'] = 'islands#orangeStretchyIcon'; $feature['status']='in_progress';}
-					elseif($order->status_id == 97) { $result['closed']+=1; $feature['options']['preset'] = 'islands#oliveStretchyIcon'; $feature['status']='in_progress';}
-					elseif($order->status_id == 4735558) { $result['closed']+=1; $feature['options']['preset'] = 'islands#redStretchyIcon'; $feature['status']='in_progress';}
-					elseif($order->status_id == 102) { $result['closed']+=1; $feature['options']['preset'] = 'islands#grayCircleDotIcon'; $feature['status']='closed';}
-					else {$result['ready']+=1; $feature['options']['preset'] = 'islands#greenStretchyIcon'; $feature['status']='in_progress'; $feature['status']='waiting';}
-					if($order->status_id != 4735558)
-					$feature['properties']['iconContent'] = '<span style="font-size:x-small; color:grey;">#'.$order->number.'</span> <span style="font-size:12px; color:black;">'.$order_data['delivery_aw_date'].'</span>';
-					else
-					$feature['properties']['iconContent'] = '<span style="font-size:x-small; color:red;">АРЕЛАН</span> <span style="font-size:12px; color:red;">'.$order_data['delivery_aw_date'].'</span>';
-					$result['features'][]=$feature;
-					//$result['data'][]=$order_data;
-
-			}
-			if ($total==0) $result['data']='';
-			echo json_encode($result, JSON_UNESCAPED_UNICODE);
-	break;
-	
 case 'getstat':
 	$domainId = cmsController::getInstance()->getCurrentDomain()->getId();
 	$select = new selector('objects');
@@ -1026,7 +885,7 @@ case 'getitemstorage':
 
 			}
 			if ($total==0) $result['data']='';
-			echo json_encode($result, JSON_UNESCAPED_UNICODE,JSON_PRETTY_PRINT);
+			echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 			
 	break;
 	
@@ -1036,24 +895,8 @@ case 'getitemstorage':
 		$orderObject->setValue('retail_export', 0);
 		$order->refresh();
 		$order->commit();
-		echo json_encode($order->retail_export, JSON_UNESCAPED_UNICODE,JSON_PRETTY_PRINT);
+		echo json_encode($order->retail_export, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }
-	break;
-	
-	case 'getorderitems':
-		$items='';
-		echo '<table style="width:100%"><thead><th>Название</th><th>Кол-во</th><th>Удалить</th></thead><tbody>';
-		foreach($orderObject->order_items as $orderItem){
-		$item = $objectsCollection->getObject($orderItem);
-		$item_page= $item->item_link;
-		$page = $hierarchy->getElement($item_page[0]->id);
-		if (!empty($orderItem)){
-			echo '<tr><td>'.$item->name.'</td><td><input style="width:35px" class="amount" data-object_id="'.$page->getObjectId().'" data-id="'.$item->id.'" value="'.$item->item_amount.'"></td><td><button style="width:35px" class="remove" data-id="'.$item->id.'">Удалить</button></td></tr>';
-			//echo '<pre>'; print_r($page); echo '</pre>';
-		}
-		}
-		echo '</tbody></table><button id="additems">Добавить товары</button><button id="saveitems">Сохранить товары</button>';
-	//echo json_encode($items, JSON_UNESCAPED_UNICODE);
 	break;
 	
 	case 'removeitem':
@@ -1274,7 +1117,7 @@ $order_data['payment_status_id'] = $order->payment_status_id;
 					$v = mb_convert_encoding($v, 'UTF-8', 'CP1251');
 				}
 			});
-			echo json_encode($result, JSON_UNESCAPED_UNICODE,JSON_PRETTY_PRINT);
+			echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 	break;
 		}
 }
