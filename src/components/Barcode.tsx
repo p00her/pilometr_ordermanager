@@ -38,5 +38,5 @@ export default function Barcode({ value, width = 2.4, height = 36 }: Props) {
 
   if (!value) return <span>—</span>;
 
-  return <svg ref={ref} style={{ display: 'block', maxWidth: 360, height: 36, letterSpacing: 4 }} />;
+  return <svg ref={ref} style={{ display: 'block', maxWidth: 360 }} />;
 }
