@@ -153,7 +153,7 @@ function maxGetSettingsByEmail($chats, $email) {
 }
 
 /* --- Формирование текста сообщения о заказе --- */
-function maxBuildOrderText($order, $d_methods, $p_methods = array(), $p_statuses = array()) {
+function maxBuildOrderText($order, $d_methods, $p_methods = array(), $p_statuses = array(), $o_statuses = array(), $prefix = '') {
 	$number = $order->number;
 	$price = $order->getValue('total_price');
 	$poluchatel = $order->getValue('poluchatel') ?: '—';
@@ -176,8 +176,16 @@ function maxBuildOrderText($order, $d_methods, $p_methods = array(), $p_statuses
 	if (!empty($d_methods[$deliveryId])) {
 		$deliveryName = $d_methods[$deliveryId];
 	}
+	$statusName = 'ID ' . $order->status_id;
+	if (!empty($o_statuses[$order->status_id])) {
+		$statusName = $o_statuses[$order->status_id];
+	}
 
-	$text = '<b>Заказ №' . $number . '</b>';
+	if ($prefix) {
+		$text = $prefix . "\n";
+	}
+	$text .= '<b>Заказ №' . $number . '</b>';
+	$text .= "\n📌 Статус: " . $statusName;
 	$text .= "\n💰 Сумма: " . number_format($price, 0, '', ' ') . ' ₽';
 	$text .= "\n📦 Способ получения: " . $deliveryName;
 	$text .= "\n💳 Оплата: " . $paymentName . ' (' . $paymentStatusName . ')';
@@ -379,7 +387,7 @@ case 'send_max_notification':
 		echo json_encode(['ok' => false, 'error' => 'order not found']);
 		break;
 	}
-		$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array(), isset($p_methods) ? $p_methods : array(), isset($p_statuses) ? $p_statuses : array());
+		$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array(), isset($p_methods) ? $p_methods : array(), isset($p_statuses) ? $p_statuses : array(), isset($o_statuses) ? $o_statuses : array(), '📋 <b>Уведомление о заказе</b>');
 	$token = MAX_BOT_TOKEN;
 	if (!$token) {
 		echo json_encode(['ok' => false, 'error' => 'bot token not configured']);
@@ -462,7 +470,8 @@ case 'auto_notify':
 
 		// отправляем только пользователям, у которых включён этот тип события
 		// и подходит способ получения
-				$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array(), isset($p_methods) ? $p_methods : array(), isset($p_statuses) ? $p_statuses : array());
+			$prefix = ($eventType === 'order_cancelled') ? '❌ <b>Заказ отменён</b>' : '🆕 <b>Новый заказ</b>';
+			$text = maxBuildOrderText($order, isset($d_methods) ? $d_methods : array(), isset($p_methods) ? $p_methods : array(), isset($p_statuses) ? $p_statuses : array(), isset($o_statuses) ? $o_statuses : array(), $prefix);
 
 		foreach ($chats as $c) {
 			if (empty($c['chat_id'])) continue;
