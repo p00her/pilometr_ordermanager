@@ -23,4 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-_test_*
+_test_*_verify*

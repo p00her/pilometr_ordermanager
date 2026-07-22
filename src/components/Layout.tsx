@@ -65,8 +65,12 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, p: sidebarCollapsed ? 1 : '8px 4px 8px 8px' }}>
-        <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: 'text.secondary' }}>
+      <Box sx={{
+        display: 'flex', alignItems: 'center', gap: 0.5,
+        p: sidebarCollapsed ? '8px 0' : '8px 4px 8px 8px',
+        bgcolor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
+      }}>
+        <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: '#fff' }}>
           {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
         </IconButton>
         {!sidebarCollapsed && (
