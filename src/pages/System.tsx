@@ -11,10 +11,29 @@ import {
   Switch,
   FormControlLabel,
   Chip,
+  FormGroup,
+  Checkbox,
+  Divider,
+  Paper,
 } from '@mui/material';
 import axios from 'axios';
+import SendToMobileIcon from '@mui/icons-material/SendToMobile';
 import { triggerFullSync, getCachedOrders } from '../api/ordersApi';
 import { setMeta, replaceOrders } from '../db/db';
+import { getMaxSettings, updateMaxSettings, type MaxNotificationSettings } from '../api/maxApi';
+
+type NotifyKey = 'new_order' | 'order_cancelled';
+
+interface NotifySetting {
+  key: NotifyKey;
+  label: string;
+  desc: string;
+}
+
+const NOTIFY_ITEMS: NotifySetting[] = [
+  { key: 'new_order', label: 'Новый заказ', desc: 'Автоматически при появлении нового заказа в системе' },
+  { key: 'order_cancelled', label: 'Заказ отменён', desc: 'Когда заказ получает статус «Отменён»' },
+];
 
 export default function System() {
   const [status, setStatus] = useState<{ count: number; fullSyncDone: boolean; lastSyncTime: string } | null>(null);
@@ -23,6 +42,17 @@ export default function System() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [clearBeforeSync, setClearBeforeSync] = useState(false);
+
+  const [maxSettings, setMaxSettings] = useState<MaxNotificationSettings>({
+    new_order: true,
+    order_cancelled: false,
+    delivery_ids: [],
+  });
+  const [dMethods, setDMethods] = useState<Record<string, string>>({});
+  const [maxLoading, setMaxLoading] = useState(true);
+  const [maxSaving, setMaxSaving] = useState(false);
+  const [maxError, setMaxError] = useState('');
+  const [maxSuccess, setMaxSuccess] = useState('');
 
   const fetchStatus = async () => {
     try {
@@ -44,6 +74,18 @@ export default function System() {
     fetchStatus();
     const id = setInterval(fetchStatus, 3000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    getMaxSettings()
+      .then((res) => {
+        if (res.ok) {
+          if (res.settings) setMaxSettings(res.settings);
+          if (res.d_methods) setDMethods(res.d_methods);
+        }
+      })
+      .catch(() => setMaxError('Не удалось загрузить настройки MAX'))
+      .finally(() => setMaxLoading(false));
   }, []);
 
   const handleFullSync = async () => {
@@ -77,6 +119,53 @@ export default function System() {
       setBusy(false);
     }
   };
+
+  const handleMaxToggle = (key: NotifyKey) => {
+    setMaxSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleDeliveryToggle = (id: string) => {
+    setMaxSettings((prev) => {
+      const num = Number(id);
+      const exists = prev.delivery_ids.includes(num);
+      return {
+        ...prev,
+        delivery_ids: exists
+          ? prev.delivery_ids.filter((d) => d !== num)
+          : [...prev.delivery_ids, num],
+      };
+    });
+  };
+
+  const handleDeliveryAll = () => {
+    setMaxSettings((prev) => ({
+      ...prev,
+      delivery_ids: prev.delivery_ids.length === 0
+        ? Object.keys(dMethods).map(Number)
+        : [],
+    }));
+  };
+
+  const handleMaxSave = async () => {
+    setMaxSaving(true);
+    setMaxError('');
+    setMaxSuccess('');
+    try {
+      const res = await updateMaxSettings(maxSettings);
+      if (res.ok) {
+        setMaxSuccess('Настройки MAX сохранены');
+      } else {
+        setMaxError('Ошибка сохранения');
+      }
+    } catch {
+      setMaxError('Ошибка сети');
+    } finally {
+      setMaxSaving(false);
+    }
+  };
+
+  const allSelected = maxSettings.delivery_ids.length === Object.keys(dMethods).length;
+  const nothingSelected = maxSettings.delivery_ids.length === 0;
 
   return (
     <Box>
@@ -141,15 +230,84 @@ export default function System() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>MAX уведомления</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Настройка уведомлений о заказах в приложении MAX.
-          </Typography>
-          <Button variant="outlined" component="a" href="/max-settings">
-            Настроить уведомления
-          </Button>
+          {maxError && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setMaxError('')}>{maxError}</Alert>}
+          {maxSuccess && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMaxSuccess('')}>{maxSuccess}</Alert>}
+
+          {maxLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress size={24} /></Box>
+          ) : (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <SendToMobileIcon color="primary" />
+                <Typography variant="h6">MAX уведомления</Typography>
+              </Box>
+
+              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>Типы событий</Typography>
+                <FormGroup>
+                  {NOTIFY_ITEMS.map((item) => (
+                    <FormControlLabel
+                      key={item.key}
+                      control={<Switch checked={maxSettings[item.key]} onChange={() => handleMaxToggle(item.key)} />}
+                      label={
+                        <Box>
+                          <Typography variant="body1">{item.label}</Typography>
+                          <Typography variant="caption" color="text.secondary">{item.desc}</Typography>
+                        </Box>
+                      }
+                      sx={{ mb: 0.5 }}
+                    />
+                  ))}
+                </FormGroup>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>Способы получения</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  Получать уведомления только для выбранных способов получения. Если ничего не выбрано — уведомления приходят по всем.
+                </Typography>
+                <Divider sx={{ mb: 1.5 }} />
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={allSelected}
+                        indeterminate={!allSelected && !nothingSelected}
+                        onChange={handleDeliveryAll}
+                      />
+                    }
+                    label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Все способы</Typography>}
+                    sx={{ mb: 0.5 }}
+                  />
+                  {Object.entries(dMethods)
+                    .sort(([, a], [, b]) => a.localeCompare(b))
+                    .map(([id, name]) => (
+                      <FormControlLabel
+                        key={id}
+                        control={
+                          <Checkbox
+                            checked={maxSettings.delivery_ids.includes(Number(id))}
+                            onChange={() => handleDeliveryToggle(id)}
+                            size="small"
+                          />
+                        }
+                        label={<Typography variant="body2">{name}</Typography>}
+                        sx={{ ml: 3, mb: 0 }}
+                      />
+                    ))}
+                </FormGroup>
+                {nothingSelected && Object.keys(dMethods).length > 0 && (
+                  <Chip label="Уведомления по всем способам" size="small" color="info" sx={{ mt: 1 }} />
+                )}
+              </Paper>
+
+              <Button variant="contained" onClick={handleMaxSave} disabled={maxSaving}>
+                {maxSaving ? 'Сохранение...' : 'Сохранить настройки MAX'}
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
     </Box>
