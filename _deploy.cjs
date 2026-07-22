@@ -1,4 +1,19 @@
 const { Client } = require('ssh2');
+const { readFileSync } = require('fs');
+const { join } = require('path');
+
+const phpConn = new Client();
+phpConn.on('ready', () => {
+  phpConn.exec('cat > /var/www/html/endpoint.php', (err, stream) => {
+    if (err) { console.log('PHP deploy ERR:', err.message); phpConn.end(); return; }
+    stream.write(readFileSync(join(__dirname, 'endpoint.php'), 'utf8'));
+    stream.end();
+    stream.on('close', () => { phpConn.end(); console.log('PHP endpoint.php updated'); });
+  });
+}).on('error', e => console.log('PHP deploy skip (no access):', e.message)).connect({
+  host: '77.222.57.205', username: 'root', password: 'ndW-_Q-Ee,p79f', readyTimeout: 10000
+});
+
 const conn = new Client();
 const cmds = [
   'cd /root/pilometr_ordermanager && git pull',

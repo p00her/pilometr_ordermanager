@@ -26,7 +26,7 @@ define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
 
 if ($data['key'] == '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f'){
 $mode = $data['mode'];
-$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem'];
+$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem', 'getallnames4statuses'];
 if (!in_array($mode, $publicModes) && !isset($_SESSION['auth'])) {
     echo json_encode(['error' => 'auth_required']);
     exit;
