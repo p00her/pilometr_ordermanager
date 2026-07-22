@@ -15,7 +15,6 @@ type NonDefaultColor = 'info' | 'warning' | 'success' | 'error';
 export function labelStatusColor(label: string): NonDefaultColor | undefined {
   const l = label.toLowerCase();
   if (l.includes('оплачивается')) return 'info';
-  if (l.includes('отправлен')) return 'success';
   return undefined;
 }
 
