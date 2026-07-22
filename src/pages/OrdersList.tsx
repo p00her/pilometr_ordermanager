@@ -33,7 +33,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getCachedOrders, triggerSync, getReferenceData, API_URL } from '../api/ordersApi';
 import { getAllOrders, replaceOrders, mergeOrders, getMeta, setMeta } from '../db/db';
 import type { Order, ReferenceData } from '../types';
-import { STATUS_COLORS } from '../constants';
+import { STATUS_COLORS, paletteColor } from '../constants';
 
 function reverseMap(obj: Record<number, string>): Record<string, string> {
   const rev: Record<string, string> = {};
@@ -330,7 +330,7 @@ export default function OrdersList() {
             >
               {refData?.o_statuses &&
                 Object.entries(refData.o_statuses).map(([k, v]) => (
-                  <MenuItem key={k} value={k} sx={{ bgcolor: v.toLowerCase().includes('оплачивается') ? alpha(theme.palette.info.main, 0.12) : STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined }}>
+                  <MenuItem key={k} value={k} sx={{ bgcolor: (() => { const pc = paletteColor(v, k); return pc ? alpha(theme.palette[pc].main, 0.12) : undefined; })() }}>
                     <Checkbox checked={filters.statusId.includes(k)} size="small" />
                     <ListItemText primary={v} />
                   </MenuItem>
@@ -438,13 +438,13 @@ export default function OrdersList() {
                       {(() => {
                         const label = refData?.o_statuses[order.status_id ?? -1] ?? order.order_status ?? '—';
                         const sid = order.status_id ?? statusNameToId[label];
-                        const isOrderPaying = label.toLowerCase().includes('оплачивается');
+                        const pc = paletteColor(label, sid);
                         return (
                           <Chip
                             label={label}
                             size="small"
-                            color={isOrderPaying ? 'default' : (STATUS_COLORS[String(sid)] ?? 'default')}
-                            style={isOrderPaying ? { backgroundColor: theme.palette.info.main, color: '#fff', fontWeight: 600 } : undefined}
+                            color={pc ?? STATUS_COLORS[String(sid)] ?? 'default'}
+                            style={pc ? { backgroundColor: theme.palette[pc].main, color: '#fff', fontWeight: 600 } : undefined}
                             sx={{
                               whiteSpace: 'normal',
                               height: 'auto',

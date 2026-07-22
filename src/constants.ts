@@ -9,3 +9,20 @@ export const STATUS_COLORS: Record<string, 'info' | 'warning' | 'success' | 'err
   '102': 'default',
   '4735558': 'error',
 };
+
+type NonDefaultColor = 'info' | 'warning' | 'success' | 'error';
+
+export function labelStatusColor(label: string): NonDefaultColor | undefined {
+  const l = label.toLowerCase();
+  if (l.includes('оплачивается')) return 'info';
+  if (l.includes('отправлен')) return 'success';
+  return undefined;
+}
+
+export function paletteColor(label: string, id: number | string): NonDefaultColor | undefined {
+  const lc = labelStatusColor(label);
+  if (lc) return lc;
+  const c = STATUS_COLORS[String(id)];
+  if (c && c !== 'default') return c as NonDefaultColor;
+  return undefined;
+}

@@ -48,7 +48,7 @@ import axios from 'axios';
 const API_URL = '/endpoint.php';
 import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
 import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
-import { STATUS_COLORS } from '../constants';
+import { paletteColor } from '../constants';
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -431,12 +431,11 @@ export default function OrderDetail() {
                   renderValue={(v) => {
                     const val = v as number;
                     const label = refData?.o_statuses[val] || '';
-                    const isPaying = label.toLowerCase().includes('оплачивается');
-                    const c = isPaying ? 'info' as const : STATUS_COLORS[String(val)];
+                    const pc = paletteColor(label, val);
                     return (
                       <Box sx={{
                         display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
-                        bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
+                        bgcolor: pc ? alpha(theme.palette[pc].main, 0.12) : undefined,
                       }}>
                         {label || '—'}
                       </Box>
@@ -444,11 +443,14 @@ export default function OrderDetail() {
                   }}
                 >
                   {refData?.o_statuses &&
-                    Object.entries(refData.o_statuses).map(([k, v]) => (
-                      <MenuItem key={k} value={Number(k)} sx={{ bgcolor: v.toLowerCase().includes('оплачивается') ? alpha(theme.palette.info.main, 0.12) : STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined, '&.Mui-selected': { bgcolor: v.toLowerCase().includes('оплачивается') ? alpha(theme.palette.info.main, 0.12) : STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined } }}>
-                        {v}
-                      </MenuItem>
-                    ))}
+                    Object.entries(refData.o_statuses).map(([k, v]) => {
+                      const pc = paletteColor(v, k);
+                      return (
+                        <MenuItem key={k} value={Number(k)} sx={{ bgcolor: pc ? alpha(theme.palette[pc].main, 0.12) : undefined, '&.Mui-selected': { bgcolor: pc ? alpha(theme.palette[pc].main, 0.12) : undefined } }}>
+                          {v}
+                        </MenuItem>
+                      );
+                    })}
                 </Select>
               </FormControl>
             </Grid>
@@ -535,12 +537,11 @@ export default function OrderDetail() {
             Статус заказа:{' '}
             {(function() {
               const label = refData?.o_statuses[order?.status_id ?? -1] || '';
-              const isPaying = label.toLowerCase().includes('оплачивается');
-              const c = isPaying ? 'info' as const : STATUS_COLORS[String(order?.status_id ?? '')];
+              const pc = paletteColor(label, order?.status_id ?? '');
               return (
                 <Box component="span" sx={{
                   display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
-                  bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
+                  bgcolor: pc ? alpha(theme.palette[pc].main, 0.12) : undefined,
                 }}>
                   {label || '—'}
                 </Box>
@@ -553,12 +554,11 @@ export default function OrderDetail() {
             Статус оплаты:{' '}
             {(function() {
               const label = refData?.p_statuses[order?.payment_status_id ?? -1] || '';
-              const isPaying = label.toLowerCase().includes('оплачивается');
-              const c = isPaying ? 'info' as const : STATUS_COLORS[String(order?.payment_status_id ?? '')];
+              const pc = paletteColor(label, order?.payment_status_id ?? '');
               return (
                 <Box component="span" sx={{
                   display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
-                  bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
+                  bgcolor: pc ? alpha(theme.palette[pc].main, 0.12) : undefined,
                 }}>
                   {label || '—'}
                 </Box>
