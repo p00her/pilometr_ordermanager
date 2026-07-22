@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { triggerSync, triggerFullSync, getCachedOrders } from '../api/ordersApi';
-import { getMeta, setMeta, mergeOrders } from '../db/db';
+import { getMeta, setMeta, mergeOrders, replaceOrders } from '../db/db';
 
 export default function System() {
   const [status, setStatus] = useState<{ count: number; fullSyncDone: boolean; lastSyncTime: string } | null>(null);
@@ -52,7 +52,6 @@ export default function System() {
         if (res.data.fullSyncDone) {
           const data = await getCachedOrders();
           if (data.data.length > 0) {
-            const { replaceOrders } = await import('../db/db');
             await replaceOrders(data.data);
           }
           if (data.lastSyncTime) {
