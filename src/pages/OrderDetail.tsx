@@ -598,7 +598,7 @@ export default function OrderDetail() {
         </TableContainer>
       </Paper>
 
-      <Box className="print-only" sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+      <Box className="print-only" sx={{ mt: 4, display: 'flex', gap: 12 }}>
         <Typography sx={{ fontSize: '0.75rem' }}>Дата: _________________</Typography>
         <Typography sx={{ fontSize: '0.75rem' }}>Подпись: _______________</Typography>
       </Box>
