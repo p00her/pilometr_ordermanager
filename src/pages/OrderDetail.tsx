@@ -392,6 +392,18 @@ export default function OrderDetail() {
                   onChange={(e) =>
                     handleFieldChange('status_id', e.target.value)
                   }
+                  renderValue={(v) => {
+                    const val = v as number;
+                    const c = STATUS_COLORS[String(val)];
+                    return (
+                      <Box sx={{
+                        display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
+                        bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
+                      }}>
+                        {refData?.o_statuses[val] || '—'}
+                      </Box>
+                    );
+                  }}
                 >
                   {refData?.o_statuses &&
                     Object.entries(refData.o_statuses).map(([k, v]) => (
