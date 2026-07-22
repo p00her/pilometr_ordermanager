@@ -42,6 +42,9 @@ body {
     font-size: 0.7rem !important;
     padding: 2px 4px !important;
   }
+  .print-smaller svg {
+    height: 21px !important;
+  }
   .MuiChip-root {
     display: inline-flex !important;
   }
