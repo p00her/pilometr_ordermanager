@@ -43,3 +43,8 @@ export async function autoNotify(): Promise<{ ok: boolean; sent: number; total: 
   const res = await axios.get(`${API_URL}?${buildParams({ key: API_KEY, mode: 'auto_notify' })}`);
   return res.data;
 }
+
+export async function unregisterChat(chatId: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await axios.get(`${API_URL}?${buildParams({ key: API_KEY, mode: 'unregister_chat', chat_id: chatId })}`);
+  return res.data;
+}

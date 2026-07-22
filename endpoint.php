@@ -26,7 +26,7 @@ define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
 
 if ($data['key'] == '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f'){
 $mode = $data['mode'];
-$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem', 'getallnames4statuses'];
+$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'unregister_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem', 'getallnames4statuses'];
 if (!in_array($mode, $publicModes) && !isset($_SESSION['auth'])) {
     echo json_encode(['error' => 'auth_required']);
     exit;
@@ -335,6 +335,28 @@ case 'register_chat':
 		}
 	}
 
+	echo json_encode(['ok' => true]);
+	break;
+
+/* --- Отмена регистрации chat_id --- */
+case 'unregister_chat':
+	$chatId = isset($_REQUEST['chat_id']) ? $_REQUEST['chat_id'] : '';
+	if (!$chatId) {
+		echo json_encode(['ok' => false, 'error' => 'chat_id required']);
+		break;
+	}
+	$chats = maxLoadChats();
+	$filtered = array();
+	foreach ($chats as $c) {
+		if ($c['chat_id'] !== $chatId) {
+			$filtered[] = $c;
+		}
+	}
+	if (count($filtered) === count($chats)) {
+		echo json_encode(['ok' => false, 'error' => 'chat not found']);
+		break;
+	}
+	maxSaveChats($filtered);
 	echo json_encode(['ok' => true]);
 	break;
 

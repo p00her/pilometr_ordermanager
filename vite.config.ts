@@ -9,6 +9,11 @@ export default defineConfig({
         target: 'https://pilometr.ru',
         changeOrigin: true,
         secure: false,
+        cookieDomainRewrite: '',
+      },
+      '/api': {
+        target: 'http://localhost:8088',
+        changeOrigin: true,
       },
     },
   },

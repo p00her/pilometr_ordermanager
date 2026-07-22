@@ -3,7 +3,8 @@ import {
   Box, Typography, TextField, Button, Alert, CircularProgress, Paper,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { registerChat } from '../api/maxApi';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { registerChat, unregisterChat } from '../api/maxApi';
 
 declare global {
   interface Window {
@@ -72,6 +73,25 @@ export default function MaxApp() {
     }
   };
 
+  const handleUnregister = async () => {
+    const effectiveId = userId || chatId;
+    if (!effectiveId) return;
+    setStatus('loading');
+    try {
+      const res = await unregisterChat(effectiveId);
+      if (res.ok) {
+        setStatus('ready');
+        setMessage('Вы отписались от уведомлений MAX.');
+      } else {
+        setStatus('error');
+        setMessage('Ошибка: ' + (res.error || 'неизвестная'));
+      }
+    } catch {
+      setStatus('error');
+      setMessage('Ошибка сети');
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 420, mx: 'auto', mt: 6, p: 3 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -80,7 +100,16 @@ export default function MaxApp() {
         {status === 'done' ? (
           <Box sx={{ textAlign: 'center' }}>
             <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
-            <Alert severity="success">{message}</Alert>
+            <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<CancelIcon />}
+              onClick={handleUnregister}
+              disabled={status === 'loading'}
+            >
+              Отписаться от уведомлений
+            </Button>
           </Box>
         ) : (
           <>
