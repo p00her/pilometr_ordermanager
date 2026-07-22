@@ -84,9 +84,9 @@ export default function MaxApp() {
           </Box>
         ) : (
           <>
-            {chatId && (
+            {userId && (
               <Alert severity="info" sx={{ mb: 2 }}>
-                Подключено к чату MAX (ID: {chatId})
+                Подключено к чату MAX (ID: {userId})
               </Alert>
             )}
 
@@ -99,7 +99,7 @@ export default function MaxApp() {
               helperText="Укажите ваш email для связи с аккаунтом"
             />
 
-            {!chatId && (
+            {!userId && !chatId && (
               <TextField
                 label="Chat ID (вручную)"
                 fullWidth size="small"
@@ -113,7 +113,7 @@ export default function MaxApp() {
             <Button
               variant="contained" fullWidth
               onClick={handleRegister}
-              disabled={status === 'loading' || !chatId}
+              disabled={status === 'loading' || !(userId || chatId)}
             >
               {status === 'loading' ? <CircularProgress size={20} /> : 'Подключить'}
             </Button>
