@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material';
+import axios from 'axios';
 import {
   Box,
   Typography,
@@ -29,7 +30,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { getCachedOrders, triggerSync, getReferenceData, API_URL } from '../api/ordersApi';
+import { getCachedOrders, triggerSync } from '../api/ordersApi';
 import { getAllOrders, replaceOrders, mergeOrders, getMeta, setMeta } from '../db/db';
 import type { Order, ReferenceData } from '../types';
 
@@ -136,7 +137,7 @@ export default function OrdersList() {
       setLoading(false);
 
       Promise.all([
-        getReferenceData(API_URL),
+        axios.get('/api/reference').then(r => r.data),
         getCachedOrders(),
       ]).then(async ([ref, data]) => {
         setRefData(ref);

@@ -89,6 +89,15 @@ async function fullSync(clear = false) {
       }
     }
 
+    try {
+      const ref = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`);
+      if (ref) {
+        db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(ref), 0]);
+      }
+    } catch (e) {
+      console.error('Full sync: failed to fetch reference data:', e.message);
+    }
+
     const nowStr = new Date().toISOString();
     setMeta('lastSyncTime', nowStr);
     setMeta('fullSyncDone', '1');
@@ -115,6 +124,9 @@ async function syncOrders() {
     setMeta('lastSyncTime', new Date().toISOString());
     saveDb();
 
+    httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=getallnames4statuses`).then(ref => {
+      if (ref) db.run('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)', ['reference_data', JSON.stringify(ref), 0]);
+    }).catch(() => {});
     httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=auto_notify`).catch(() => {});
   } catch (e) {
     console.error('Sync error:', e.message);
@@ -271,6 +283,19 @@ app.get('/api/orders', (req, res) => {
 app.post('/api/orders/sync', async (_req, res) => {
   await syncOrders();
   res.json({ ok: true });
+});
+
+app.get('/api/reference', (_req, res) => {
+  const stmt = db.prepare('SELECT value FROM cache WHERE key = ?');
+  stmt.bind(['reference_data']);
+  if (stmt.step()) {
+    const val = stmt.getAsObject().value;
+    stmt.free();
+    res.json(JSON.parse(val));
+  } else {
+    stmt.free();
+    res.json({ o_statuses: {}, d_methods: {}, d_statuses: {}, p_methods: {}, p_statuses: {} });
+  }
 });
 
 app.get('/api/debug/count', (_req, res) => {
