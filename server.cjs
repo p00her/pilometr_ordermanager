@@ -251,6 +251,13 @@ app.post('/api/orders/sync', async (_req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/debug/count', (_req, res) => {
+  const stmt = db.prepare('SELECT count(*) as cnt FROM orders');
+  stmt.step();
+  res.json({ count: stmt.getAsObject().cnt });
+  stmt.free();
+});
+
 app.post('/api/orders/full-sync', (_req, res) => {
   db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
   saveDb();
