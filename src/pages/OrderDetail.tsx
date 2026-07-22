@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
@@ -43,6 +43,7 @@ import {
   getCatalogItem,
 } from '../api/ordersApi';
 import { sendMaxNotification } from '../api/maxApi';
+import { getNote, saveNote } from '../api/notesApi';
 import axios from 'axios';
 const API_URL = '/endpoint.php';
 import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
@@ -71,7 +72,8 @@ export default function OrderDetail() {
   const [editedFields, setEditedFields] = useState<Record<string, unknown>>({});
   const [maxSending, setMaxSending] = useState(false);
   const [maxSent, setMaxSent] = useState(false);
-
+  const [note, setNote] = useState('');
+  const noteTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const storageKeys = useMemo(() => {
     const did = Number(order?.delivery_id);
@@ -111,6 +113,7 @@ export default function OrderDetail() {
         setLoading(false);
       }
     })();
+    getNote(orderId).then((n) => setNote(n)).catch(() => {});
     getMeta('refData').then((cached) => {
       if (cached) {
         try { setRefData(JSON.parse(cached)); } catch {}
@@ -125,6 +128,14 @@ export default function OrderDetail() {
       }
     }).catch(() => {});
   }, [orderId]);
+
+  useEffect(() => {
+    if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    noteTimerRef.current = setTimeout(() => {
+      saveNote(orderId, note).catch(() => {});
+    }, 5000);
+    return () => { if (noteTimerRef.current) clearTimeout(noteTimerRef.current); };
+  }, [note, orderId]);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -484,6 +495,22 @@ export default function OrderDetail() {
               {maxSending ? 'Отправка...' : maxSent ? 'Отправлено' : 'Уведомить в MAX'}
             </Button>
           </Box>
+        </Paper>
+      </Box>
+
+      <Box className="no-print" sx={{ mb: 3 }}>
+        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom>Заметка</Typography>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={6}
+            size="small"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Заметка к заказу..."
+          />
         </Paper>
       </Box>
 
