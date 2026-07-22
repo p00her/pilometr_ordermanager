@@ -22,8 +22,7 @@ import {
   useTheme,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
@@ -72,7 +71,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
         bgcolor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
       }}>
         <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: '#fff' }}>
-          {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          {sidebarCollapsed ? <MenuIcon /> : <MenuOpenIcon />}
         </IconButton>
         {!sidebarCollapsed && (
           <Box
