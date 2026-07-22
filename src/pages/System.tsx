@@ -12,7 +12,8 @@ import {
   Chip,
 } from '@mui/material';
 import axios from 'axios';
-import { triggerSync, triggerFullSync } from '../api/ordersApi';
+import { triggerSync, triggerFullSync, getCachedOrders } from '../api/ordersApi';
+import { getMeta, setMeta, mergeOrders } from '../db/db';
 
 export default function System() {
   const [status, setStatus] = useState<{ count: number; fullSyncDone: boolean; lastSyncTime: string } | null>(null);
@@ -44,7 +45,23 @@ export default function System() {
     setError('');
     try {
       await triggerFullSync(clearBeforeSync);
-      setTimeout(fetchStatus, 2000);
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const res = await axios.get('/api/debug/count');
+        setStatus(res.data);
+        if (res.data.fullSyncDone) {
+          const data = await getCachedOrders();
+          if (data.data.length > 0) {
+            const { replaceOrders } = await import('../db/db');
+            await replaceOrders(data.data);
+          }
+          if (data.lastSyncTime) {
+            await setMeta('lastSyncTime', data.lastSyncTime);
+          }
+          window.dispatchEvent(new CustomEvent('order-changed'));
+          break;
+        }
+      }
     } catch {
       setError('Ошибка запуска полной синхронизации');
     } finally {
@@ -57,7 +74,16 @@ export default function System() {
     setError('');
     try {
       await triggerSync();
-      setTimeout(fetchStatus, 2000);
+      const since = (await getMeta('lastSyncTime')) || undefined;
+      const data = await getCachedOrders(since);
+      if (data.data.length > 0) {
+        await mergeOrders(data.data);
+      }
+      if (data.lastSyncTime) {
+        await setMeta('lastSyncTime', data.lastSyncTime);
+      }
+      window.dispatchEvent(new CustomEvent('order-changed'));
+      setTimeout(fetchStatus, 500);
     } catch {
       setError('Ошибка синхронизации');
     } finally {
