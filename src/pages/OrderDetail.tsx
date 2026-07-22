@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PrintIcon from '@mui/icons-material/Print';
 import {
   Box,
   Typography,
@@ -46,6 +48,7 @@ import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } 
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const orderId = Number(id);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -305,9 +308,17 @@ export default function OrderDetail() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Заказ №{order?.number}
-      </Typography>
+      <Box className="no-print" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <IconButton onClick={() => navigate('/orders')}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h5" sx={{ flexGrow: 1 }}>
+          Заказ №{order?.number} (ID: {orderId})
+        </Typography>
+        <IconButton onClick={() => window.print()} title="Печать">
+          <PrintIcon />
+        </IconButton>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -457,6 +468,7 @@ export default function OrderDetail() {
       </Box>
 
       <Box className="print-only" sx={{ mb: 3, fontSize: '0.75rem' }}>
+        <Typography variant="h6" sx={{ fontSize: '1rem', mb: 1 }}>Заказ №{order?.number}</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 24px' }}>
           <Typography sx={{ fontSize: 'inherit' }}>Получатель: {order?.poluchatel || '—'}</Typography>
           <Typography sx={{ fontSize: 'inherit' }}>Телефон: {order?.mobtelefon || '—'}</Typography>
