@@ -110,14 +110,18 @@ export default function OrdersList() {
 
   useEffect(() => {
     (async () => {
-      const [savedField, savedDir, ls] = await Promise.all([
+      const [savedField, savedDir, ls, cachedRef] = await Promise.all([
         getMeta('sortField'),
         getMeta('sortDir'),
         getMeta('lastSyncTime'),
+        getMeta('refData'),
       ]);
       if (savedField === 'number' || savedField === 'order_date') setSortField(savedField);
       if (savedDir === 'asc' || savedDir === 'desc') setSortDir(savedDir);
       if (ls) setLastSyncLabel(formatDate(ls));
+      if (cachedRef) {
+        try { setRefData(JSON.parse(cachedRef)); } catch {}
+      }
 
       const local = await getAllOrders();
       if (local.length > 0) {
@@ -138,7 +142,9 @@ export default function OrdersList() {
         refPromise,
         getCachedOrders(),
       ]).then(async ([ref, data]) => {
-        setRefData(ref && typeof ref === 'object' ? { o_statuses: ref.o_statuses ?? {}, d_methods: ref.d_methods ?? {}, d_statuses: ref.d_statuses ?? {}, p_methods: ref.p_methods ?? {}, p_statuses: ref.p_statuses ?? {} } : null);
+        const safe = ref && typeof ref === 'object' ? { o_statuses: ref.o_statuses ?? {}, d_methods: ref.d_methods ?? {}, d_statuses: ref.d_statuses ?? {}, p_methods: ref.p_methods ?? {}, p_statuses: ref.p_statuses ?? {} } : null;
+        if (safe) setRefData(safe);
+        setMeta('refData', JSON.stringify(safe)).catch(() => {});
         if (data.data.length > 0) {
           const replaced = await replaceOrders(data.data);
           setOrders(replaced);
