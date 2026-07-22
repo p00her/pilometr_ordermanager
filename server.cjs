@@ -18,15 +18,17 @@ function saveDb() {
   writeFileSync(DB_PATH, Buffer.from(db.export()));
 }
 
-function httpsGetJson(url) {
+function httpsGetJson(url, timeout = 60000) {
   return new Promise((resolve, reject) => {
-    https.get(url, { rejectUnauthorized: false }, (res) => {
+    const req = https.get(url, { rejectUnauthorized: false }, (res) => {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
         try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
       });
-    }).on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(timeout, () => { req.destroy(); reject(new Error('timeout')); });
   });
 }
 
@@ -55,17 +57,22 @@ function upsertOrders(orders) {
 
 async function fullSync() {
   try {
-    const url = `https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=0&length=1&draw=0`;
-    const info = await httpsGetJson(url);
+    const info = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=0&length=1&draw=0`);
     const total = info ? info.recordsTotal : 0;
     if (!total) { console.log('Full sync: no orders found'); return; }
 
     const BATCH = 500;
+    let synced = 0;
     for (let start = 0; start < total; start += BATCH) {
-      const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=${start}&length=${BATCH}&draw=0`);
-      const orders = data && data.data;
-      if (orders && Array.isArray(orders) && orders.length > 0) {
-        upsertOrders(orders);
+      try {
+        const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=${start}&length=${BATCH}&draw=0`);
+        const orders = data && data.data;
+        if (orders && Array.isArray(orders) && orders.length > 0) {
+          upsertOrders(orders);
+          synced += orders.length;
+        }
+      } catch (e) {
+        console.error(`Full sync batch ${start} error:`, e.message);
       }
     }
 
@@ -73,7 +80,7 @@ async function fullSync() {
     setMeta('lastSyncTime', nowStr);
     setMeta('fullSyncDone', '1');
     saveDb();
-    console.log(`Full sync completed: ${total} orders`);
+    console.log(`Full sync completed: ${synced}/${total} orders`);
   } catch (e) {
     console.error('Full sync error:', e.message);
   }
@@ -260,8 +267,9 @@ app.get('/api/debug/count', (_req, res) => {
 
 app.post('/api/orders/full-sync', (_req, res) => {
   db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
+  db.run('DELETE FROM orders');
   saveDb();
-  fullSync();
+  fullSync().catch(e => console.error('Full sync error:', e.message));
   res.json({ ok: true, message: 'Full sync started in background' });
 });
 
