@@ -511,8 +511,8 @@ export default function OrderDetail() {
                   <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Артикул</TableCell>
                   <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Штрихкод</TableCell>
                   <TableCell className="print-smaller">Кол-во</TableCell>
-                  <TableCell className="print-smaller">Цена</TableCell>
                   <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Остатки</TableCell>
+                  <TableCell className="print-smaller">Цена</TableCell>
                   <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Действия</TableCell>
                 </TableRow>
               </TableHead>
@@ -536,12 +536,6 @@ export default function OrderDetail() {
                         />
                       </span>
                       <span className="print-only">{item.amount}</span>
-                    </TableCell>
-                    <TableCell className="print-smaller">
-                      {item.price.toLocaleString('ru-RU', {
-                        style: 'currency',
-                        currency: 'RUB',
-                      })}
                     </TableCell>
                       <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     {loadingStorage ? (
@@ -579,6 +573,12 @@ export default function OrderDetail() {
                       )
                     )}
                   </TableCell>
+                    <TableCell className="print-smaller">
+                      {item.price.toLocaleString('ru-RU', {
+                        style: 'currency',
+                        currency: 'RUB',
+                      })}
+                    </TableCell>
                   <TableCell className="hide-print-col no-print" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <IconButton
                       color="error"
@@ -600,6 +600,16 @@ export default function OrderDetail() {
             </TableBody>
           </Table>
         </TableContainer>
+        {items.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 4, mt: 2, px: 1 }}>
+            <Typography variant="body2">
+              Товаров в заказе: <strong>{items.reduce((s, i) => s + i.amount, 0)} шт.</strong>
+            </Typography>
+            <Typography variant="body2">
+              Сумма заказа: <strong>{items.reduce((s, i) => s + i.amount * i.price, 0).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' })}</strong>
+            </Typography>
+          </Box>
+        )}
       </Paper>
 
       <Box className="print-only" sx={{ mt: 4, textAlign: 'right' }}>
