@@ -19,7 +19,7 @@ export default function Barcode({ value, width = 2.4, height = 36 }: Props) {
         width,
         height,
         displayValue: true,
-        fontSize: 12,
+        fontSize: 16,
         textMargin: 2,
         margin: 0,
         background: 'transparent',
