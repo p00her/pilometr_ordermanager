@@ -66,8 +66,9 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{
-        display: 'flex', alignItems: 'center', gap: 0.5,
-        p: sidebarCollapsed ? '8px 0' : '8px 4px 8px 8px',
+        display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0,
+        height: 56, px: sidebarCollapsed ? 0 : 1,
+        justifyContent: sidebarCollapsed ? 'center' : undefined,
         bgcolor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
       }}>
         <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: '#fff' }}>
@@ -78,7 +79,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
             component="img"
             src="https://pilometr.ru/templates/pilometr/newfront/img/new_new/logo_white.svg"
             alt="Pilometr"
-            sx={{ height: 32 }}
+            sx={{ height: 48 }}
           />
         )}
       </Box>
