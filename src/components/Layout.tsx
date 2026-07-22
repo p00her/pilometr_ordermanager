@@ -65,7 +65,20 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, p: sidebarCollapsed ? 1 : '8px 4px 8px 8px' }}>
+        <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: 'text.secondary' }}>
+          {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+        </IconButton>
+        {!sidebarCollapsed && (
+          <Box
+            component="img"
+            src="https://pilometr.ru/templates/pilometr/newfront/img/new_new/logo_white.svg"
+            alt="Pilometr"
+            sx={{ height: 32 }}
+          />
+        )}
+      </Box>
+      <Divider />
       <List>
         {navItems.map((item) => (
           <ListItemButton
@@ -97,69 +110,12 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
           {!sidebarCollapsed && <ListItemText primary="MAX" secondary="Уведомления" />}
         </ListItemButton>
       </List>
-      <Divider />
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-        <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: 'text.secondary' }}>
-          {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-        </IconButton>
-      </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}
-        style={{
-          backgroundColor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
-          backgroundImage: 'none',
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Box
-            component="img"
-            src="https://pilometr.ru/templates/pilometr/newfront/img/new_new/logo_white.svg"
-            alt="Pilometr"
-            sx={{ height: 36, mr: 1.5 }}
-          />
-          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            Управление заказами
-          </Typography>
-
-          <Typography variant="body2" sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}>
-            {userName}
-          </Typography>
-
-          <IconButton
-            color="inherit"
-            onClick={() => setMode(nextMode[mode])}
-            title={`Тема: ${mode}`}
-            sx={{ borderRadius: 1, gap: 0.5 }}
-          >
-            <Icon />
-            <Typography
-              variant="body2"
-              sx={{ display: { xs: 'none', sm: 'inline' }, textTransform: 'none' }}
-            >
-              {mode === 'light' ? 'Светлая' : mode === 'dark' ? 'Тёмная' : 'Авто'}
-            </Typography>
-          </IconButton>
-
-          <IconButton color="inherit" onClick={onLogout} title="Выйти">
-            <LogoutIcon />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
 
       <Box
         component="nav"
@@ -188,6 +144,8 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
                 sx: {
                   width: sidebarCollapsed ? 64 : 260,
                   transition: 'width 0.2s ease',
+                  borderRight: '1px solid',
+                  borderColor: 'divider',
                 },
               },
             }}
@@ -197,19 +155,63 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
         )}
       </Box>
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: { xs: 1.5, sm: 2, md: 3 },
-          mt: 8,
-          minHeight: 'calc(100vh - 64px)',
-          bgcolor: 'background.default',
-          maxWidth: '100vw',
-          overflowX: 'hidden',
-        }}
-      >
-        <Outlet />
+      <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minWidth: 0 }}>
+        <AppBar
+          position="sticky"
+          style={{
+            backgroundColor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
+            backgroundImage: 'none',
+          }}
+        >
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              sx={{ mr: 2, display: { md: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+              Управление заказами
+            </Typography>
+
+            <IconButton
+              color="inherit"
+              onClick={() => setMode(nextMode[mode])}
+              title={`Тема: ${mode}`}
+              sx={{ borderRadius: 1, gap: 0.5 }}
+            >
+              <Icon />
+              <Typography
+                variant="body2"
+                sx={{ display: { xs: 'none', sm: 'inline' }, textTransform: 'none' }}
+              >
+                {mode === 'light' ? 'Светлая' : mode === 'dark' ? 'Тёмная' : 'Авто'}
+              </Typography>
+            </IconButton>
+
+            <Typography variant="body2" sx={{ mr: 1, ml: 1, display: { xs: 'none', sm: 'block' } }}>
+              {userName}
+            </Typography>
+
+            <IconButton color="inherit" onClick={onLogout} title="Выйти">
+              <LogoutIcon />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 1.5, sm: 2, md: 3 },
+            bgcolor: 'background.default',
+            overflowX: 'hidden',
+          }}
+        >
+          <Outlet />
+        </Box>
       </Box>
 
       <Dialog open={maxDialogOpen} onClose={() => setMaxDialogOpen(false)} maxWidth="sm" fullWidth>
