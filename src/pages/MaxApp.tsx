@@ -24,6 +24,7 @@ declare global {
 
 export default function MaxApp() {
   const [chatId, setChatId] = useState('');
+  const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'done' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -35,6 +36,7 @@ export default function MaxApp() {
       if (data) {
         const id = data.chat?.id || data.user?.id;
         if (id) setChatId(String(id));
+        if (data.user?.id) setUserId(String(data.user.id));
         wa.ready();
       } else {
         setMessage('initDataUnsafe отсутствует. WebApp есть, но нет данных инициализации.');
@@ -48,14 +50,15 @@ export default function MaxApp() {
   }, []);
 
   const handleRegister = async () => {
-    if (!chatId) {
+    const effectiveId = userId || chatId;
+    if (!effectiveId) {
       setMessage('Не удалось определить chat_id. Откройте страницу из приложения MAX.');
       setStatus('error');
       return;
     }
     setStatus('loading');
     try {
-      const res = await registerChat(chatId, email);
+      const res = await registerChat(effectiveId, email);
       if (res.ok) {
         setStatus('done');
         setMessage('Подключение MAX выполнено! Теперь вы будете получать уведомления о заказах.');

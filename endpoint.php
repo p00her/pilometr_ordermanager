@@ -303,6 +303,11 @@ case 'register_chat':
 	}
 	unset($c);
 	if (!$found) {
+		// наследуем настройки от существующего чата с тем же email
+		if ($email && !$settingsRaw) {
+			$existing = maxGetSettingsByEmail($chats, $email);
+			if ($existing !== null) $settings = $existing;
+		}
 		$chats[] = array(
 			'chat_id' => $chatId,
 			'email' => $email,
@@ -382,7 +387,6 @@ case 'update_max_settings':
 		if ($c['email'] === $email) {
 			$c['settings'] = $settings;
 			$found = true;
-			break;
 		}
 	}
 	unset($c);
