@@ -480,15 +480,9 @@ export default function OrderDetail() {
           <Typography sx={{ fontSize: 'inherit' }}>Комментарий: {order?.comment || '—'}</Typography>
         </Box>
 
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography sx={{ fontSize: 'inherit', mb: 4 }}>Дата: _________________</Typography>
-            <Typography sx={{ fontSize: 'inherit' }}>Подпись: _______________</Typography>
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 'inherit', mb: 4 }}>Дата: _________________</Typography>
-            <Typography sx={{ fontSize: 'inherit' }}>Подпись: _______________</Typography>
-          </Box>
+        <Box sx={{ mt: 6 }}>
+          <Typography sx={{ fontSize: 'inherit', mb: 5 }}>Дата: _________________</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>Подпись: _______________</Typography>
         </Box>
       </Box>
 
