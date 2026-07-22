@@ -30,7 +30,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { getCachedOrders, triggerSync } from '../api/ordersApi';
+import { getCachedOrders, triggerSync, getReferenceData, API_URL } from '../api/ordersApi';
 import { getAllOrders, replaceOrders, mergeOrders, getMeta, setMeta } from '../db/db';
 import type { Order, ReferenceData } from '../types';
 
@@ -137,7 +137,13 @@ export default function OrdersList() {
       setLoading(false);
 
       Promise.all([
-        axios.get('/api/reference').then(r => r.data),
+        axios.get('/api/reference').then(async (r) => {
+          const d = r.data;
+          if (d && typeof d === 'object' && d.o_statuses && Object.keys(d.o_statuses).length > 0) {
+            return d;
+          }
+          return getReferenceData(API_URL);
+        }),
         getCachedOrders(),
       ]).then(async ([ref, data]) => {
         setRefData(ref && typeof ref === 'object' ? { o_statuses: ref.o_statuses ?? {}, d_methods: ref.d_methods ?? {}, d_statuses: ref.d_statuses ?? {}, p_methods: ref.p_methods ?? {}, p_statuses: ref.p_statuses ?? {} } : null);
