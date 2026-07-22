@@ -71,7 +71,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
         bgcolor: theme.palette.mode === 'light' ? '#7c965a' : '#2c371e',
       }}>
         <IconButton onClick={() => setSidebarCollapsed((c) => !c)} sx={{ color: '#fff' }}>
-          {sidebarCollapsed ? <MenuIcon /> : <MenuOpenIcon />}
+          {sidebarCollapsed ? <MenuIcon fontSize="small" /> : <MenuOpenIcon fontSize="small" />}
         </IconButton>
         {!sidebarCollapsed && (
           <Box
