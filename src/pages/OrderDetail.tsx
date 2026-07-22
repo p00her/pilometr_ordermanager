@@ -136,6 +136,7 @@ export default function OrderDetail() {
   const doSaveNote = async () => {
     setNoteSaving(true);
     try { await saveNote(orderId, note); } catch {}
+    initialNoteRef.current = note;
     setNoteSaving(false);
     setNoteCountdown(0);
     if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
