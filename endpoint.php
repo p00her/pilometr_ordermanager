@@ -26,7 +26,7 @@ define('MAX_NOTIFIED_FILE', __DIR__ . '/max_notified.json');
 
 if ($data['key'] == '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f'){
 $mode = $data['mode'];
-$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'unregister_chat', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem', 'getallnames4statuses'];
+$publicModes = ['login', 'checkauth', 'logout', 'register_chat', 'unregister_chat', 'check_chat_registered', 'get_max_settings', 'update_max_settings', 'orderslist', 'auto_notify', 'getcatalogitem', 'getallnames4statuses'];
 if (!in_array($mode, $publicModes) && !isset($_SESSION['auth'])) {
     echo json_encode(['error' => 'auth_required']);
     exit;
@@ -261,6 +261,24 @@ case 'login':
 		break;
 	// ====== КОНЕЦ АВТОРИЗАЦИИ ======
 	
+
+/* --- Проверка регистрации chat_id --- */
+case 'check_chat_registered':
+	$chatId = isset($_REQUEST['chat_id']) ? $_REQUEST['chat_id'] : '';
+	if (!$chatId) {
+		echo json_encode(['ok' => false, 'registered' => false, 'error' => 'chat_id required']);
+		break;
+	}
+	$chats = maxLoadChats();
+	$found = null;
+	foreach ($chats as $c) {
+		if ($c['chat_id'] === $chatId) {
+			$found = $c;
+			break;
+		}
+	}
+	echo json_encode(['ok' => true, 'registered' => $found !== null, 'email' => $found ? $found['email'] : '']);
+	break;
 
 /* --- Регистрация chat_id --- */
 case 'register_chat':

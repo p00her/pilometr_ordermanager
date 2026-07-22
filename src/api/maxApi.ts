@@ -48,3 +48,8 @@ export async function unregisterChat(chatId: string): Promise<{ ok: boolean; err
   const res = await axios.get(`${API_URL}?${buildParams({ key: API_KEY, mode: 'unregister_chat', chat_id: chatId })}`);
   return res.data;
 }
+
+export async function checkChatRegistered(chatId: string): Promise<{ ok: boolean; registered: boolean; email?: string }> {
+  const res = await axios.get(`${API_URL}?${buildParams({ key: API_KEY, mode: 'check_chat_registered', chat_id: chatId })}`);
+  return res.data;
+}

@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { registerChat, unregisterChat } from '../api/maxApi';
+import { registerChat, unregisterChat, checkChatRegistered } from '../api/maxApi';
 
 declare global {
   interface Window {
@@ -27,6 +27,7 @@ export default function MaxApp() {
   const [chatId, setChatId] = useState('');
   const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'done' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
@@ -42,13 +43,27 @@ export default function MaxApp() {
       } else {
         setMessage('initDataUnsafe отсутствует. WebApp есть, но нет данных инициализации.');
         setStatus('error');
+        return;
       }
     } else {
       setMessage('Объект WebApp не найден. Откройте страницу из приложения MAX через бота.');
       setStatus('error');
+      return;
     }
     setStatus('ready');
   }, []);
+
+  useEffect(() => {
+    const effectiveId = userId || chatId;
+    if (!effectiveId || status !== 'ready') return;
+    checkChatRegistered(effectiveId).then((res) => {
+      if (res.registered) {
+        setRegisteredEmail(res.email || '');
+        setStatus('done');
+        setMessage('Вы уже подключены к уведомлениям MAX.');
+      }
+    }).catch(() => {});
+  }, [chatId, userId, status]);
 
   const handleRegister = async () => {
     const effectiveId = userId || chatId;
@@ -101,6 +116,11 @@ export default function MaxApp() {
           <Box sx={{ textAlign: 'center' }}>
             <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
             <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>
+            {registeredEmail && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Email: {registeredEmail}
+              </Typography>
+            )}
             <Button
               variant="outlined"
               color="error"
