@@ -86,14 +86,7 @@ export default function System() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Синхронизация</Typography>
-            <FormControlLabel
-              control={<Switch checked={clearBeforeSync} onChange={(e) => setClearBeforeSync(e.target.checked)} />}
-              label="Очистить перед sync"
-              slotProps={{ typography: { variant: 'body2' } }}
-            />
-          </Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>Синхронизация</Typography>
 
           {loading ? (
             <CircularProgress size={24} />
@@ -131,6 +124,12 @@ export default function System() {
             </Box>
           )}
 
+          <FormControlLabel
+            control={<Switch checked={clearBeforeSync} onChange={(e) => setClearBeforeSync(e.target.checked)} />}
+            label="Очистить кэш перед синхронизацией"
+            slotProps={{ typography: { variant: 'body2' } }}
+            sx={{ mb: 1 }}
+          />
           <Button
             variant="contained"
             onClick={handleFullSync}
