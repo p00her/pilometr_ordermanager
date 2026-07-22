@@ -267,7 +267,6 @@ app.get('/api/debug/count', (_req, res) => {
 
 app.post('/api/orders/full-sync', (_req, res) => {
   db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
-  db.run('DELETE FROM orders');
   saveDb();
   fullSync().catch(e => console.error('Full sync error:', e.message));
   res.json({ ok: true, message: 'Full sync started in background' });
