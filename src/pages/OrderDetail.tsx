@@ -505,7 +505,7 @@ export default function OrderDetail() {
                 <TableRow>
                   <TableCell className="print-smaller">Название</TableCell>
                   <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Артикул</TableCell>
-                  <TableCell className="print-smaller">Штрихкод</TableCell>
+                  <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Штрихкод</TableCell>
                   <TableCell className="print-smaller">Кол-во</TableCell>
                   <TableCell className="print-smaller">Цена</TableCell>
                   <TableCell className="hide-print-col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Остатки</TableCell>
@@ -517,7 +517,7 @@ export default function OrderDetail() {
                   <TableRow key={idx}>
                     <TableCell className="print-smaller">{item.name}</TableCell>
                     <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{item.artikul ?? '—'}</TableCell>
-                    <TableCell className="print-smaller"><Barcode value={item.bar_code ?? ''} /></TableCell>
+                    <TableCell className="print-smaller" sx={{ display: { xs: 'none', sm: 'table-cell' } }}><Barcode value={item.bar_code ?? ''} /></TableCell>
                     <TableCell className="print-smaller">
                       <span className="no-print">
                         <TextField
