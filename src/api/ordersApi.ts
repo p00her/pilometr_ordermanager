@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type {
-  OrdersListResponse,
+  Order,
   OrderDetail,
   StatsResponse,
   ReferenceData,
@@ -46,30 +46,14 @@ async function apiPost<T>(
   return res.data;
 }
 
-export async function getOrdersList(
-  endpoint: string,
-  start: number,
-  length: number,
-  draw: number,
-  extra: Record<string, unknown> = {}
-): Promise<OrdersListResponse> {
-  return apiPost<OrdersListResponse>(
-    endpoint,
-    { key: API_KEY, mode: 'orderslist' },
-    { start, length, draw, ...extra }
-  );
+export async function getCachedOrders(since?: string): Promise<{ data: Order[]; lastSyncTime: string }> {
+  const url = since ? `/api/orders?since=${encodeURIComponent(since)}` : '/api/orders';
+  const res = await axios.get<{ data: Order[]; lastSyncTime: string }>(url);
+  return res.data;
 }
 
-export async function getOrdersListSince(
-  endpoint: string,
-  modifiedSince: string,
-  draw: number
-): Promise<OrdersListResponse> {
-  return apiPost<OrdersListResponse>(
-    endpoint,
-    { key: API_KEY, mode: 'orderslist' },
-    { start: 0, length: 99999, draw, modified_since: modifiedSince }
-  );
+export async function triggerSync(): Promise<void> {
+  await axios.post('/api/orders/sync');
 }
 
 export async function getOrderDetail(

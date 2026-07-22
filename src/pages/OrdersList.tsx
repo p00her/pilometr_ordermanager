@@ -27,9 +27,8 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { getOrdersListSince, getReferenceData, API_URL } from '../api/ordersApi';
-import { autoNotify } from '../api/maxApi';
-import { getAllOrders, mergeOrders, replaceOrders, getMeta, setMeta } from '../db/db';
+import { getCachedOrders, triggerSync, getReferenceData, API_URL } from '../api/ordersApi';
+import { getAllOrders, replaceOrders, getMeta, setMeta } from '../db/db';
 import type { Order, ReferenceData } from '../types';
 
 const STATUS_COLORS: Record<string, 'info' | 'warning' | 'success' | 'error' | 'default'> = {
@@ -55,14 +54,6 @@ function formatDate(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-async function shouldNightlyFullSync(): Promise<boolean> {
-  const lastFull = await getMeta('lastFullSyncDate');
-  const today = new Date().toISOString().slice(0, 10);
-  if (lastFull === today) return false;
-  await setMeta('lastFullSyncDate', today);
-  return true;
 }
 
 export default function OrdersList() {
@@ -107,42 +98,23 @@ export default function OrdersList() {
   const sync = useCallback(async (forceFull = false) => {
     setSyncing(true);
     try {
-      if (forceFull || await shouldNightlyFullSync()) {
-        const data = await getOrdersListSince(API_URL, '', 0);
-        const replaced = await replaceOrders(data.data ?? []);
+      if (forceFull) await triggerSync();
+      const ls = await getMeta('lastSyncTime');
+      const data = await getCachedOrders(ls || undefined);
+      if (data.data.length > 0) {
+        const replaced = await replaceOrders(data.data);
         setOrders(replaced);
-        if (!refData && (data.o_statuses || data.p_methods)) {
-          const ref = {
-            o_statuses: data.o_statuses ?? {},
-            d_methods: data.d_methods ?? {},
-            d_statuses: data.d_statuses ?? {},
-            p_methods: data.p_methods ?? {},
-            p_statuses: data.p_statuses ?? {},
-          };
-          setRefData(ref);
-          setMeta('refData', JSON.stringify(ref));
-        }
-      } else {
-        const modifiedSince = await getMeta('lastSyncTime');
-        const prevCount = (await getAllOrders()).length;
-        const data = await getOrdersListSince(API_URL, modifiedSince ?? '', 0);
-        const merged = await mergeOrders(data.data ?? []);
-        setOrders(merged);
-        const added = merged.length - prevCount;
-        if (added > 0) setNewCount((c) => c + added);
       }
-
-      const now = new Date().toISOString();
-      await setMeta('lastSyncTime', now);
-      setLastSyncLabel(formatDate(now));
-
-      autoNotify().catch(() => {});
+      if (data.lastSyncTime) {
+        await setMeta('lastSyncTime', data.lastSyncTime);
+        setLastSyncLabel(formatDate(data.lastSyncTime));
+      }
     } catch {
       setError('Ошибка синхронизации');
     } finally {
       setSyncing(false);
     }
-  }, [refData]);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -163,14 +135,17 @@ export default function OrdersList() {
 
       Promise.all([
         getReferenceData(API_URL),
-        getOrdersListSince(API_URL, '', 0),
+        getCachedOrders(),
       ]).then(async ([ref, data]) => {
         setRefData(ref);
-        const replaced = await replaceOrders(data.data ?? []);
-        setOrders(replaced);
-        const now = new Date().toISOString();
-        await setMeta('lastSyncTime', now);
-        setLastSyncLabel(formatDate(now));
+        if (data.data.length > 0) {
+          const replaced = await replaceOrders(data.data);
+          setOrders(replaced);
+        }
+        if (data.lastSyncTime) {
+          await setMeta('lastSyncTime', data.lastSyncTime);
+        setLastSyncLabel(formatDate(data.lastSyncTime));
+        }
         setInitialLoadDone(true);
       }).catch(() => {
         setInitialLoadDone(true);

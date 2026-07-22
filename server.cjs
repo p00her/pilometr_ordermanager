@@ -8,6 +8,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'app.db');
 const PORT = process.env.PORT || 8088;
 const CERT_DIR = '/etc/letsencrypt';
+const API_KEY = '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f';
 
 if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
@@ -15,6 +16,48 @@ let db;
 
 function saveDb() {
   writeFileSync(DB_PATH, Buffer.from(db.export()));
+}
+
+function httpsGetJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { rejectUnauthorized: false }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
+
+async function syncOrders() {
+  try {
+    const stmt = db.prepare('SELECT value FROM meta WHERE key = ?');
+    stmt.bind(['lastSyncTime']);
+    let lastSync = '';
+    if (stmt.step()) lastSync = stmt.getAsObject().value;
+    stmt.free();
+
+    const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&modified_since=${encodeURIComponent(lastSync)}&start=0&length=99999&draw=0`);
+    const orders = data && data.data;
+    if (orders && Array.isArray(orders) && orders.length > 0) {
+      const now = Date.now();
+      const upsert = db.prepare('INSERT INTO orders (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
+      for (const o of orders) {
+        if (o.id != null) upsert.run([o.id, JSON.stringify(o), now]);
+      }
+      upsert.free();
+      saveDb();
+    }
+
+    const nowStr = new Date().toISOString();
+    db.run('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ['lastSyncTime', nowStr]);
+    saveDb();
+
+    httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=auto_notify`).catch(() => {});
+  } catch (e) {
+    console.error('Sync error:', e.message);
+  }
 }
 
 async function initDb() {
@@ -33,6 +76,15 @@ async function initDb() {
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
     expires_at INTEGER NOT NULL DEFAULT 0
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY,
+    data TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
   )`);
   saveDb();
 }
@@ -132,6 +184,34 @@ app.post('/api/cache/clear', (_req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/orders', (req, res) => {
+  const since = req.query.since ? new Date(req.query.since).getTime() : 0;
+  let stmt;
+  if (since > 0) {
+    stmt = db.prepare('SELECT data FROM orders WHERE updated_at > ?');
+    stmt.bind([since]);
+  } else {
+    stmt = db.prepare('SELECT data FROM orders');
+  }
+  const orders = [];
+  while (stmt.step()) {
+    const row = stmt.getAsObject();
+    try { orders.push(JSON.parse(row.data)); } catch {}
+  }
+  stmt.free();
+  const ms = db.prepare('SELECT value FROM meta WHERE key = ?');
+  ms.bind(['lastSyncTime']);
+  let lastSyncTime = '';
+  if (ms.step()) lastSyncTime = ms.getAsObject().value;
+  ms.free();
+  res.json({ data: orders, lastSyncTime });
+});
+
+app.post('/api/orders/sync', async (_req, res) => {
+  await syncOrders();
+  res.json({ ok: true });
+});
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*path', (_req, res) => {
@@ -140,6 +220,8 @@ app.get('*path', (_req, res) => {
 
 (async () => {
   await initDb();
+  syncOrders();
+  setInterval(syncOrders, 30000);
   const certPath = path.join(CERT_DIR, 'live', 'npm-1');
   const hasCerts = existsSync(path.join(certPath, 'fullchain.pem'));
   if (hasCerts) {
