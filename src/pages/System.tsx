@@ -6,17 +6,19 @@ import {
   Typography,
   Button,
   CircularProgress,
+  LinearProgress,
   Alert,
   Switch,
   FormControlLabel,
   Chip,
 } from '@mui/material';
 import axios from 'axios';
-import { triggerSync, triggerFullSync, getCachedOrders } from '../api/ordersApi';
-import { getMeta, setMeta, mergeOrders, replaceOrders } from '../db/db';
+import { triggerFullSync, getCachedOrders } from '../api/ordersApi';
+import { setMeta, replaceOrders } from '../db/db';
 
 export default function System() {
   const [status, setStatus] = useState<{ count: number; fullSyncDone: boolean; lastSyncTime: string } | null>(null);
+  const [progress, setProgress] = useState<{ synced: number; total: number; active: boolean }>({ synced: 0, total: 0, active: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -24,8 +26,12 @@ export default function System() {
 
   const fetchStatus = async () => {
     try {
-      const res = await axios.get('/api/debug/count');
-      setStatus(res.data);
+      const [sr, pr] = await Promise.all([
+        axios.get('/api/debug/count'),
+        axios.get('/api/debug/sync-progress'),
+      ]);
+      setStatus(sr.data);
+      setProgress(pr.data);
       setError('');
     } catch {
       setError('Не удалось получить статус');
@@ -36,7 +42,7 @@ export default function System() {
 
   useEffect(() => {
     fetchStatus();
-    const id = setInterval(fetchStatus, 10000);
+    const id = setInterval(fetchStatus, 3000);
     return () => clearInterval(id);
   }, []);
 
@@ -45,11 +51,15 @@ export default function System() {
     setError('');
     try {
       await triggerFullSync(clearBeforeSync);
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 120; i++) {
         await new Promise(r => setTimeout(r, 2000));
-        const res = await axios.get('/api/debug/count');
-        setStatus(res.data);
-        if (res.data.fullSyncDone) {
+        const [sr, pr] = await Promise.all([
+          axios.get('/api/debug/count'),
+          axios.get('/api/debug/sync-progress'),
+        ]);
+        setStatus(sr.data);
+        setProgress(pr.data);
+        if (sr.data.fullSyncDone) {
           const data = await getCachedOrders();
           if (data.data.length > 0) {
             await replaceOrders(data.data);
@@ -68,28 +78,6 @@ export default function System() {
     }
   };
 
-  const handleSync = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      await triggerSync();
-      const since = (await getMeta('lastSyncTime')) || undefined;
-      const data = await getCachedOrders(since);
-      if (data.data.length > 0) {
-        await mergeOrders(data.data);
-      }
-      if (data.lastSyncTime) {
-        await setMeta('lastSyncTime', data.lastSyncTime);
-      }
-      window.dispatchEvent(new CustomEvent('order-changed'));
-      setTimeout(fetchStatus, 500);
-    } catch {
-      setError('Ошибка синхронизации');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <Box>
       <Typography variant="h5" gutterBottom>Система</Typography>
@@ -98,58 +86,59 @@ export default function System() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>Статус синхронизации</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Синхронизация</Typography>
+            <FormControlLabel
+              control={<Switch checked={clearBeforeSync} onChange={(e) => setClearBeforeSync(e.target.checked)} />}
+              label="Очистить перед sync"
+              slotProps={{ typography: { variant: 'body2' } }}
+            />
+          </Box>
+
           {loading ? (
             <CircularProgress size={24} />
           ) : status ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
               <Typography variant="body2">
                 Заказов в кэше: <strong>{status.count}</strong>
               </Typography>
               <Typography variant="body2">
-                Полная синхронизация:{' '}
+                Статус:{' '}
                 <Chip
-                  label={status.fullSyncDone ? 'Выполнена' : 'Не выполнена'}
+                  label={status.fullSyncDone ? 'Синхронизировано' : 'Ожидает полной синхронизации'}
                   color={status.fullSyncDone ? 'success' : 'warning'}
                   size="small"
                 />
               </Typography>
               <Typography variant="body2">
-                Последняя синхронизация: <strong>{status.lastSyncTime ? new Date(status.lastSyncTime).toLocaleString('ru-RU') : '—'}</strong>
+                Последняя: <strong>{status.lastSyncTime ? new Date(status.lastSyncTime).toLocaleString('ru-RU') : '—'}</strong>
               </Typography>
             </Box>
           ) : (
-            <Typography color="text.secondary">Нет данных</Typography>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>Нет данных</Typography>
           )}
-        </CardContent>
-      </Card>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Управление</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControlLabel
-              control={<Switch checked={clearBeforeSync} onChange={(e) => setClearBeforeSync(e.target.checked)} />}
-              label="Очистить кэш перед полной синхронизацией"
-            />
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Button
-                variant="contained"
-                onClick={handleFullSync}
-                disabled={busy}
-              >
-                {busy ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-                Полная синхронизация
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleSync}
-                disabled={busy}
-              >
-                Инкрементальная синхронизация
-              </Button>
+          {progress.active && (
+            <Box sx={{ mb: 2 }}>
+              <LinearProgress
+                variant="determinate"
+                value={progress.total ? (progress.synced / progress.total) * 100 : 0}
+                sx={{ height: 8, borderRadius: 1 }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Синхронизировано: {progress.synced} / {progress.total}
+              </Typography>
             </Box>
-          </Box>
+          )}
+
+          <Button
+            variant="contained"
+            onClick={handleFullSync}
+            disabled={busy || progress.active}
+            startIcon={busy ? <CircularProgress size={18} color="inherit" /> : undefined}
+          >
+            {progress.active ? 'Выполняется...' : 'Полная синхронизация'}
+          </Button>
         </CardContent>
       </Card>
 

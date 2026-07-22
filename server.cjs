@@ -13,6 +13,7 @@ const API_KEY = '2c9cc956eedb2f75ecbbfc6b16a3b403d9d0e13f';
 if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
 let db;
+const syncProgress = { synced: 0, total: 0, active: false };
 
 function saveDb() {
   writeFileSync(DB_PATH, Buffer.from(db.export()));
@@ -56,6 +57,9 @@ function upsertOrders(orders) {
 }
 
 async function fullSync(clear = false) {
+  syncProgress.active = true;
+  syncProgress.synced = 0;
+  syncProgress.total = 0;
   try {
     if (clear) {
       db.run('DELETE FROM orders');
@@ -68,6 +72,7 @@ async function fullSync(clear = false) {
     const total = info ? info.recordsTotal : 0;
     if (!total) { console.log('Full sync: no orders found'); return; }
 
+    syncProgress.total = total;
     const BATCH = 500;
     let synced = 0;
     for (let start = 0; start < total; start += BATCH) {
@@ -77,6 +82,7 @@ async function fullSync(clear = false) {
         if (orders && Array.isArray(orders) && orders.length > 0) {
           upsertOrders(orders);
           synced += orders.length;
+          syncProgress.synced = synced;
         }
       } catch (e) {
         console.error(`Full sync batch ${start} error:`, e.message);
@@ -90,6 +96,8 @@ async function fullSync(clear = false) {
     console.log(`Full sync completed: ${synced}/${total} orders`);
   } catch (e) {
     console.error('Full sync error:', e.message);
+  } finally {
+    syncProgress.active = false;
   }
 }
 
@@ -275,6 +283,10 @@ app.get('/api/debug/count', (_req, res) => {
     fullSyncDone: getMeta('fullSyncDone') === '1',
     lastSyncTime: getMeta('lastSyncTime'),
   });
+});
+
+app.get('/api/debug/sync-progress', (_req, res) => {
+  res.json(syncProgress);
 });
 
 app.post('/api/orders/full-sync', (req, res) => {
