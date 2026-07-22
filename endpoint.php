@@ -1206,6 +1206,9 @@ $order_data['payment_status_id'] = $order->payment_status_id;
 
 			}
 			if ($total==0) $result['data']='';
+			array_walk_recursive($result, function(&$v) {
+				if (is_string($v)) $v = iconv('CP1251', 'UTF-8//IGNORE', $v);
+			});
 			echo json_encode($result, JSON_UNESCAPED_UNICODE,JSON_PRETTY_PRINT);
 	break;
 		}
