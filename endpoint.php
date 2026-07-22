@@ -891,8 +891,8 @@ case 'getitemstorage':
 	
 	case 'setexported':
 	if (!isset($data['order_id'])) {echo 'Error: order_id is not set'; exit;} else {
-		$order=order::get($order_id);
-		$orderObject->setValue('retail_export', 0);
+		$order=order::get($data['order_id']);
+		$order->setValue('retail_export', 0);
 		$order->refresh();
 		$order->commit();
 		echo json_encode($order->retail_export, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
