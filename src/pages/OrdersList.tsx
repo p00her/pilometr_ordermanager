@@ -72,7 +72,7 @@ export default function OrdersList() {
     number: '',
     poluchatel: '',
     phone: '+7',
-    email: '',
+
     dateFrom: '',
     dateTo: '',
     statusId: [] as string[],
@@ -185,7 +185,7 @@ export default function OrdersList() {
         const phoneDigits = filters.phone.replace(/\D/g, '');
         if (phoneDigits.length > 1 && !(o.mobtelefon ?? '').replace(/\D/g, '').includes(phoneDigits)) return false;
       }
-      if (filters.email && !(o.email ?? '').toLowerCase().includes(filters.email.toLowerCase())) return false;
+
       if (filters.dateFrom && o.order_date) {
         const dateParts = o.order_date.split(' ')[0].split('.');
         if (dateParts.length === 3) {
@@ -297,14 +297,7 @@ export default function OrdersList() {
             placeholder="+7 (000) 000-00-00"
             sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 170 } }}
           />
-          <TextField
-            label="E-mail"
-            size="small"
-            value={filters.email}
-            onChange={(e) => setFilters((f) => ({ ...f, email: e.target.value }))}
-            placeholder="фильтр по email"
-            sx={{ flex: { xs: '1 1 100%', sm: '0 1 auto' }, minWidth: { xs: '100%', sm: 170 } }}
-          />
+
           <TextField
             label="Дата с"
             type="date"
@@ -416,7 +409,6 @@ export default function OrdersList() {
                   </TableCell>
                   <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Получатель</TableCell>
                   <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Телефон</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>E-mail</TableCell>
                   <TableCell>Сумма</TableCell>
                   <TableCell>Статус</TableCell>
                   <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Способ получения</TableCell>
@@ -436,7 +428,6 @@ export default function OrdersList() {
                     <TableCell>{order.order_date}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{order.poluchatel}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{order.mobtelefon}</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{order.email ?? '—'}</TableCell>
                     <TableCell>
                       {order.price?.toLocaleString('ru-RU', {
                         style: 'currency',
