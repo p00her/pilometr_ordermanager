@@ -26,6 +26,7 @@ import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SendToMobileIcon from '@mui/icons-material/SendToMobile';
+import SettingsIcon from '@mui/icons-material/Settings';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
@@ -35,6 +36,7 @@ import { useThemeMode } from '../context/ThemeContext';
 const navItems = [
   { label: 'Статистика', path: '/', icon: <DashboardIcon /> },
   { label: 'Заказы', path: '/orders', icon: <ShoppingCartIcon /> },
+  { label: 'Система', path: '/system', icon: <SettingsIcon /> },
 ];
 
 const nextMode: Record<string, 'dark' | 'system' | 'light'> = {

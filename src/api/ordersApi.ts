@@ -56,6 +56,10 @@ export async function triggerSync(): Promise<void> {
   await axios.post('/api/orders/sync');
 }
 
+export async function triggerFullSync(clear = false): Promise<void> {
+  await axios.post(`/api/orders/full-sync?clear=${clear ? '1' : '0'}`);
+}
+
 export async function getOrderDetail(
   endpoint: string,
   orderId: number

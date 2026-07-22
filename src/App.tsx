@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import OrdersList from './pages/OrdersList';
 import OrderDetail from './pages/OrderDetail';
+import System from './pages/System';
 import Login from './pages/Login';
 import MaxApp from './pages/MaxApp';
 import MaxSettings from './pages/MaxSettings';
@@ -51,6 +52,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<OrderDetail />} />
+            <Route path="system" element={<System />} />
             <Route path="max-settings" element={<MaxSettings />} />
           </Route>
         </Routes>

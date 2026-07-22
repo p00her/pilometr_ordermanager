@@ -55,8 +55,15 @@ function upsertOrders(orders) {
   saveDb();
 }
 
-async function fullSync() {
+async function fullSync(clear = false) {
   try {
+    if (clear) {
+      db.run('DELETE FROM orders');
+      db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
+      saveDb();
+      console.log('Full sync: orders table cleared');
+    }
+
     const info = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=0&length=1&draw=0`);
     const total = info ? info.recordsTotal : 0;
     if (!total) { console.log('Full sync: no orders found'); return; }
@@ -270,11 +277,14 @@ app.get('/api/debug/count', (_req, res) => {
   });
 });
 
-app.post('/api/orders/full-sync', (_req, res) => {
-  db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
-  saveDb();
-  fullSync().catch(e => console.error('Full sync error:', e.message));
-  res.json({ ok: true, message: 'Full sync started in background' });
+app.post('/api/orders/full-sync', (req, res) => {
+  const clear = req.query.clear === '1' || req.query.clear === 'true';
+  if (!clear) {
+    db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
+    saveDb();
+  }
+  fullSync(clear).catch(e => console.error('Full sync error:', e.message));
+  res.json({ ok: true, message: `Full sync started${clear ? ' with clear' : ''}` });
 });
 
 app.use(express.static(path.join(__dirname, 'dist')));
