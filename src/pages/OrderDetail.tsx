@@ -26,6 +26,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -45,10 +47,12 @@ import axios from 'axios';
 const API_URL = '/endpoint.php';
 import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
 import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
+import { STATUS_COLORS } from '../constants';
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
   const orderId = Number(id);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -391,7 +395,7 @@ export default function OrderDetail() {
                 >
                   {refData?.o_statuses &&
                     Object.entries(refData.o_statuses).map(([k, v]) => (
-                      <MenuItem key={k} value={Number(k)}>
+                      <MenuItem key={k} value={Number(k)} sx={{ bgcolor: STATUS_COLORS[k] && STATUS_COLORS[k] !== 'default' ? alpha(theme.palette[STATUS_COLORS[k]].main, 0.12) : undefined }}>
                         {v}
                       </MenuItem>
                     ))}
@@ -477,10 +481,36 @@ export default function OrderDetail() {
           <Typography sx={{ fontSize: 'inherit' }}>Получатель: {order?.poluchatel || '—'}</Typography>
           <Typography sx={{ fontSize: 'inherit' }}>Телефон: {order?.mobtelefon || '—'}</Typography>
           <Typography sx={{ fontSize: 'inherit' }}>E-mail: {order?.email || '—'}</Typography>
-          <Typography sx={{ fontSize: 'inherit' }}>Статус заказа: {refData?.o_statuses[order?.status_id ?? -1] || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>
+            Статус заказа:{' '}
+            {(function() {
+              const c = STATUS_COLORS[String(order?.status_id ?? '')];
+              return (
+                <Box component="span" sx={{
+                  display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
+                  bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
+                }}>
+                  {refData?.o_statuses[order?.status_id ?? -1] || '—'}
+                </Box>
+              );
+            })()}
+          </Typography>
           <Typography sx={{ fontSize: 'inherit' }}>Способ получения: {refData?.d_methods[order?.delivery_id ?? -1] || '—'}</Typography>
           <Typography sx={{ fontSize: 'inherit' }}>Способ оплаты: {refData?.p_methods[order?.payment_id ?? -1] || '—'}</Typography>
-          <Typography sx={{ fontSize: 'inherit' }}>Статус оплаты: {refData?.p_statuses[order?.payment_status_id ?? -1] || '—'}</Typography>
+          <Typography sx={{ fontSize: 'inherit' }}>
+            Статус оплаты:{' '}
+            {(function() {
+              const c = STATUS_COLORS[String(order?.payment_status_id ?? '')];
+              return (
+                <Box component="span" sx={{
+                  display: 'inline-block', px: 0.75, py: 0.15, borderRadius: '4px', fontWeight: 600,
+                  bgcolor: c && c !== 'default' ? alpha(theme.palette[c].main, 0.12) : undefined,
+                }}>
+                  {refData?.p_statuses[order?.payment_status_id ?? -1] || '—'}
+                </Box>
+              );
+            })()}
+          </Typography>
           <Typography sx={{ fontSize: 'inherit' }}>Комментарий: {order?.comment || '—'}</Typography>
         </Box>
 
