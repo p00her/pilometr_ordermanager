@@ -444,7 +444,7 @@ export default function OrdersList() {
                             label={label}
                             size="small"
                             color={pc ?? STATUS_COLORS[String(sid)] ?? 'default'}
-                            style={pc ? { backgroundColor: theme.palette[pc].main, color: '#fff', fontWeight: 600 } : undefined}
+                            style={pc ? { backgroundColor: alpha(theme.palette[pc].main, 0.4), color: '#fff', fontWeight: 600 } : undefined}
                             sx={{
                               whiteSpace: 'normal',
                               height: 'auto',
