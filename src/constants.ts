@@ -1,5 +1,5 @@
 export const STATUS_COLORS: Record<string, 'info' | 'warning' | 'success' | 'error' | 'default'> = {
-  '97': 'info',
+  '97': 'success',
   '98': 'success',
   '99': 'warning',
   '100': 'success',
