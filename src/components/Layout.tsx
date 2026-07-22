@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -52,11 +52,22 @@ const modeIcon: Record<string, typeof LightModeIcon> = {
 };
 
 export default function Layout({ userName, onLogout }: { userName: string; onLogout: () => void }) {
+  const location = useLocation();
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      '/': 'Статистика',
+      '/orders': 'Заказы',
+      '/system': 'Система',
+    };
+    let page = titles[location.pathname];
+    if (!page && location.pathname.startsWith('/orders/')) page = 'Заказ';
+    document.title = page ? `Управление заказами — ${page}` : 'Управление заказами';
+  }, [location.pathname]);
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [maxDialogOpen, setMaxDialogOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { mode, setMode } = useThemeMode();
