@@ -207,6 +207,19 @@ app.get('/api/orders', (req, res) => {
   res.json({ data: orders, lastSyncTime });
 });
 
+app.get('/api/debug/orders', (_req, res) => {
+  const stmt = db.prepare('SELECT id, updated_at FROM orders ORDER BY id');
+  const ids = [];
+  while (stmt.step()) ids.push(stmt.getAsObject());
+  stmt.free();
+  const ms = db.prepare('SELECT value FROM meta WHERE key = ?');
+  ms.bind(['lastSyncTime']);
+  let lastSyncTime = '';
+  if (ms.step()) lastSyncTime = ms.getAsObject().value;
+  ms.free();
+  res.json({ count: ids.length, ids, lastSyncTime });
+});
+
 app.post('/api/orders/sync', async (_req, res) => {
   await syncOrders();
   res.json({ ok: true });
