@@ -8,7 +8,7 @@ interface Props {
   height?: number;
 }
 
-export default function Barcode({ value, width = 2.4, height = 36 }: Props) {
+export default function Barcode({ value, width = 2.4, height = 45 }: Props) {
   const ref = useRef<SVGSVGElement>(null);
   const theme = useTheme();
   const color = theme.palette.mode === 'dark' ? '#fff' : '#000';
