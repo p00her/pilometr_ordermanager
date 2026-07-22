@@ -259,10 +259,15 @@ app.post('/api/orders/sync', async (_req, res) => {
 });
 
 app.get('/api/debug/count', (_req, res) => {
-  const stmt = db.prepare('SELECT count(*) as cnt FROM orders');
-  stmt.step();
-  res.json({ count: stmt.getAsObject().cnt });
-  stmt.free();
+  const c = db.prepare('SELECT count(*) as cnt FROM orders');
+  c.step();
+  const cnt = c.getAsObject().cnt;
+  c.free();
+  res.json({
+    count: cnt,
+    fullSyncDone: getMeta('fullSyncDone') === '1',
+    lastSyncTime: getMeta('lastSyncTime'),
+  });
 });
 
 app.post('/api/orders/full-sync', (_req, res) => {
