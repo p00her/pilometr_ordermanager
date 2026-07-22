@@ -30,28 +30,67 @@ function httpsGetJson(url) {
   });
 }
 
-async function syncOrders() {
-  try {
-    const stmt = db.prepare('SELECT value FROM meta WHERE key = ?');
-    stmt.bind(['lastSyncTime']);
-    let lastSync = '';
-    if (stmt.step()) lastSync = stmt.getAsObject().value;
-    stmt.free();
+function getMeta(key) {
+  const stmt = db.prepare('SELECT value FROM meta WHERE key = ?');
+  stmt.bind([key]);
+  let val = '';
+  if (stmt.step()) val = stmt.getAsObject().value;
+  stmt.free();
+  return val;
+}
 
-    const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&modified_since=${encodeURIComponent(lastSync)}&start=0&length=99999&draw=0`);
-    const orders = data && data.data;
-    if (orders && Array.isArray(orders) && orders.length > 0) {
-      const now = Date.now();
-      const upsert = db.prepare('INSERT INTO orders (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
-      for (const o of orders) {
-        if (o.id != null) upsert.run([o.id, JSON.stringify(o), now]);
+function setMeta(key, value) {
+  db.run('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, value]);
+}
+
+function upsertOrders(orders) {
+  const now = Date.now();
+  const upsert = db.prepare('INSERT INTO orders (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
+  for (const o of orders) {
+    if (o.id != null) upsert.run([o.id, JSON.stringify(o), now]);
+  }
+  upsert.free();
+  saveDb();
+}
+
+async function fullSync() {
+  try {
+    const url = `https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=0&length=1&draw=0`;
+    const info = await httpsGetJson(url);
+    const total = info ? info.recordsTotal : 0;
+    if (!total) { console.log('Full sync: no orders found'); return; }
+
+    const BATCH = 500;
+    for (let start = 0; start < total; start += BATCH) {
+      const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&start=${start}&length=${BATCH}&draw=0`);
+      const orders = data && data.data;
+      if (orders && Array.isArray(orders) && orders.length > 0) {
+        upsertOrders(orders);
       }
-      upsert.free();
-      saveDb();
     }
 
     const nowStr = new Date().toISOString();
-    db.run('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ['lastSyncTime', nowStr]);
+    setMeta('lastSyncTime', nowStr);
+    setMeta('fullSyncDone', '1');
+    saveDb();
+    console.log(`Full sync completed: ${total} orders`);
+  } catch (e) {
+    console.error('Full sync error:', e.message);
+  }
+}
+
+async function syncOrders() {
+  try {
+    if (getMeta('fullSyncDone') !== '1') return;
+
+    const lastSync = getMeta('lastSyncTime');
+    const data = await httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=orderslist&modified_since=${encodeURIComponent(lastSync)}&start=0&length=99999&draw=0`);
+    const orders = data && data.data;
+    if (orders && Array.isArray(orders) && orders.length > 0) {
+      upsertOrders(orders);
+    }
+
+    setMeta('lastSyncTime', new Date().toISOString());
     saveDb();
 
     httpsGetJson(`https://pilometr.ru/endpoint.php?key=${API_KEY}&mode=auto_notify`).catch(() => {});
@@ -212,6 +251,13 @@ app.post('/api/orders/sync', async (_req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/orders/full-sync', (_req, res) => {
+  db.run('DELETE FROM meta WHERE key IN (?, ?)', ['fullSyncDone', 'lastSyncTime']);
+  saveDb();
+  fullSync();
+  res.json({ ok: true, message: 'Full sync started in background' });
+});
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*path', (_req, res) => {
@@ -220,7 +266,13 @@ app.get('*path', (_req, res) => {
 
 (async () => {
   await initDb();
-  syncOrders();
+  if (getMeta('fullSyncDone') !== '1') {
+    fullSync().then(() => {
+      syncOrders().catch(() => {});
+    }).catch(e => console.error('Full sync error:', e.message));
+  } else {
+    syncOrders().catch(() => {});
+  }
   setInterval(syncOrders, 30000);
   const liveDir = path.join(CERT_DIR, 'live');
   let certPath = '';
