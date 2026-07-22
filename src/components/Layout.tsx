@@ -260,7 +260,7 @@ export default function Layout({ userName, onLogout }: { userName: string; onLog
           <Button
             variant="outlined"
             size="small"
-            onClick={() => { setMaxDialogOpen(false); navigate('/max-settings'); }}
+            onClick={() => { setMaxDialogOpen(false); navigate('/system'); }}
           >
             Настроить уведомления
           </Button>
