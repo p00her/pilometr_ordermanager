@@ -110,17 +110,21 @@ export default function OrdersList() {
 
   useEffect(() => {
     (async () => {
-      const [savedField, savedDir, ls, cachedRef] = await Promise.all([
+      const [savedField, savedDir, ls, cachedRef, savedFilters] = await Promise.all([
         getMeta('sortField'),
         getMeta('sortDir'),
         getMeta('lastSyncTime'),
         getMeta('refData'),
+        getMeta('filters'),
       ]);
       if (savedField === 'number' || savedField === 'order_date') setSortField(savedField);
       if (savedDir === 'asc' || savedDir === 'desc') setSortDir(savedDir);
       if (ls) setLastSyncLabel(formatDate(ls));
       if (cachedRef) {
         try { setRefData(JSON.parse(cachedRef)); } catch {}
+      }
+      if (savedFilters) {
+        try { setFilters(JSON.parse(savedFilters)); } catch {}
       }
 
       const local = await getAllOrders();
@@ -172,6 +176,10 @@ export default function OrdersList() {
     const id = setInterval(() => sync(), 30000);
     return () => clearInterval(id);
   }, [autoRefresh, sync]);
+
+  useEffect(() => {
+    setMeta('filters', JSON.stringify(filters)).catch(() => {});
+  }, [filters]);
 
   const statusNameToId = useMemo(() => {
     return refData?.o_statuses ? reverseMap(refData.o_statuses) : {};
