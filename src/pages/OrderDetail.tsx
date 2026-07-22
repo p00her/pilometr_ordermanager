@@ -77,6 +77,7 @@ export default function OrderDetail() {
   const [noteCountdown, setNoteCountdown] = useState(0);
   const noteTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const noteCountdownRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const initialNoteRef = useRef('');
 
   const storageKeys = useMemo(() => {
     const did = Number(order?.delivery_id);
@@ -116,7 +117,7 @@ export default function OrderDetail() {
         setLoading(false);
       }
     })();
-    getNote(orderId).then((n) => setNote(n)).catch(() => {});
+    getNote(orderId).then((n) => { setNote(n); initialNoteRef.current = n; }).catch(() => {});
     getMeta('refData').then((cached) => {
       if (cached) {
         try { setRefData(JSON.parse(cached)); } catch {}
@@ -141,15 +142,19 @@ export default function OrderDetail() {
   };
 
   useEffect(() => {
-    if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
-    if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
-    setNoteCountdown(5);
-    noteCountdownRef.current = setInterval(() => {
-      setNoteCountdown((c) => Math.max(0, c - 1));
-    }, 1000);
-    noteTimerRef.current = setTimeout(() => {
-      doSaveNote();
-    }, 5000);
+    if (note !== initialNoteRef.current) {
+      if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+      if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
+      setNoteCountdown(5);
+      noteCountdownRef.current = setInterval(() => {
+        setNoteCountdown((c) => Math.max(0, c - 1));
+      }, 1000);
+      noteTimerRef.current = setTimeout(() => {
+        doSaveNote();
+      }, 5000);
+    } else {
+      setNoteCountdown(0);
+    }
     return () => {
       if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
       if (noteCountdownRef.current) clearInterval(noteCountdownRef.current);
@@ -691,17 +696,7 @@ export default function OrderDetail() {
 
       <Box className="no-print" sx={{ mb: 3 }}>
         <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>Заметка</Typography>
-            {noteCountdown > 0 && (
-              <Typography variant="caption" color="text.secondary">
-                Автосохранение через {noteCountdown}с
-              </Typography>
-            )}
-            <Button variant="contained" size="small" onClick={doSaveNote} disabled={noteSaving}>
-              {noteSaving ? 'Сохранение...' : 'Сохранить'}
-            </Button>
-          </Box>
+          <Typography variant="h6" sx={{ mb: 1 }}>Заметка</Typography>
           <TextField
             fullWidth
             multiline
@@ -712,6 +707,16 @@ export default function OrderDetail() {
             onChange={(e) => setNote(e.target.value)}
             placeholder="Заметка к заказу..."
           />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+            <Button variant="contained" size="small" onClick={doSaveNote} disabled={noteSaving || note === initialNoteRef.current}>
+              {noteSaving ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+            {noteCountdown > 0 && (
+              <Typography variant="caption" color="text.secondary">
+                Автосохранение через {noteCountdown}с
+              </Typography>
+            )}
+          </Box>
         </Paper>
       </Box>
 
