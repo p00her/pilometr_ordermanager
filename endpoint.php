@@ -1101,7 +1101,7 @@ case 'getitemstorage':
 			//$select->where('payment_status_id')->equals(array($_REQUEST[columns][8][search][value]));
 
 
-			$order_c = 'id';
+			$order_c = 'number';
 
 			$select->order($order_c)->desc();
 			
