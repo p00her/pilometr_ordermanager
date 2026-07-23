@@ -8,12 +8,17 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { login } from '../api/auth';
 
 export default function Login({ onLogin }: { onLogin: (name: string) => void }) {
   const [loginField, setLoginField] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -67,11 +72,22 @@ export default function Login({ onLogin }: { onLogin: (name: string) => void }) 
             />
             <TextField
               label="Пароль"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               size="small"
               fullWidth
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword((v) => !v)} edge="end" size="small">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
             {error && <Alert severity="error">{error}</Alert>}
             <Button type="submit" variant="contained" fullWidth disabled={loading || !loginField || !password}>

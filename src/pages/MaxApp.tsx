@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
   Box, Typography, TextField, Button, Alert, CircularProgress, Paper,
+  InputAdornment, IconButton,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { registerChat, unregisterChat, checkChatRegistered } from '../api/maxApi';
 import { login } from '../api/auth';
 
@@ -29,6 +32,7 @@ export default function MaxApp() {
   const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [status, setStatus] = useState<'loading' | 'login' | 'registering' | 'done' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -178,11 +182,22 @@ export default function MaxApp() {
 
             <TextField
               label="Пароль"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               fullWidth size="small"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               sx={{ mb: 2 }}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword((v) => !v)} edge="end" size="small">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
 
             <Button
