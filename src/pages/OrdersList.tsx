@@ -63,6 +63,7 @@ export default function OrdersList() {
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [error, setError] = useState('');
   const [lastSyncLabel, setLastSyncLabel] = useState('');
+  const [countdown, setCountdown] = useState(0);
   const [refData, setRefData] = useState<ReferenceData | null>(null);
 
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -192,9 +193,11 @@ export default function OrdersList() {
   }, []);
 
   useEffect(() => {
-    if (!autoRefresh) return;
-    const id = setInterval(() => sync(), 30000);
-    return () => clearInterval(id);
+    if (!autoRefresh) { setCountdown(0); return; }
+    setCountdown(30);
+    const countId = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    const syncId = setInterval(() => { sync(); setCountdown(30); }, 30000);
+    return () => { clearInterval(countId); clearInterval(syncId); };
   }, [autoRefresh, sync]);
 
   useEffect(() => {
@@ -273,6 +276,11 @@ export default function OrdersList() {
           </IconButton>
           <Typography variant="caption" color="text.secondary" sx={{ minWidth: 80, textAlign: 'center', lineHeight: '32px' }}>
             {syncing ? 'синхронизация...' : (lastSyncLabel || '—')}
+            {autoRefresh && !syncing && countdown > 0 && (
+              <Typography variant="caption" color="text.disabled" component="span" sx={{ ml: 0.5 }}>
+                {countdown}с
+              </Typography>
+            )}
           </Typography>
           <IconButton
             size="small"
