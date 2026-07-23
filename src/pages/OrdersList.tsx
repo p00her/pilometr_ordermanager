@@ -170,10 +170,26 @@ export default function OrdersList() {
   }, []);
 
   useEffect(() => {
-    const handler = () => sync();
+    const handler = async () => {
+      try {
+        const prevSync = await getMeta('lastSyncTime');
+        await triggerSync();
+        const data = await getCachedOrders(prevSync || undefined);
+        if (data.data.length > 0) {
+          const merged = await mergeOrders(data.data);
+          setOrders(merged);
+        }
+        if (data.lastSyncTime) {
+          await setMeta('lastSyncTime', data.lastSyncTime);
+          setLastSyncLabel(formatDate(data.lastSyncTime));
+        }
+      } catch {
+        setError('Ошибка синхронизации');
+      }
+    };
     window.addEventListener('order-changed', handler);
     return () => window.removeEventListener('order-changed', handler);
-  }, [sync]);
+  }, []);
 
   useEffect(() => {
     if (!autoRefresh) return;

@@ -46,8 +46,8 @@ import { sendMaxNotification } from '../api/maxApi';
 import { getNote, saveNote } from '../api/notesApi';
 import axios from 'axios';
 const API_URL = '/endpoint.php';
-import { getOrderById, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
-import { type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
+import { saveOrders, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
+import { type Order, type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
 import { paletteColor } from '../constants';
 
 export default function OrderDetail() {
@@ -95,22 +95,9 @@ export default function OrderDetail() {
     (async () => {
       setLoading(true);
       try {
-        const local = await getOrderById(orderId);
-        if (local?.items) {
-          setOrder(local as unknown as OrderDetail);
-          setItems(local.items ?? []);
-          setLoading(false);
-          return;
-        }
-      } catch {}
-      try {
         const detail = await getOrderDetail(API_URL, orderId);
-        if (detail?.items) {
-          setOrder(detail);
-          setItems(detail.items ?? []);
-        } else {
-          setError('Заказ не найден');
-        }
+        setOrder(detail);
+        setItems(detail?.items ?? []);
       } catch {
         setError('Ошибка загрузки заказа');
       } finally {
@@ -229,7 +216,14 @@ export default function OrderDetail() {
 
       await updateOrder(API_URL, orderId, payload);
 
-      setOrder((prev) => prev ? { ...prev, ...editedFields } as OrderDetail : null);
+      try {
+        const fresh = await getOrderDetail(API_URL, orderId);
+        setOrder(fresh);
+        setItems(fresh?.items ?? []);
+        await saveOrders([{ ...fresh, id: orderId } as Order]).catch(() => {});
+      } catch {
+        setOrder((prev) => prev ? { ...prev, ...editedFields } as OrderDetail : null);
+      }
       setEditedFields({});
       setSuccess('Заказ сохранен');
       window.dispatchEvent(new CustomEvent('order-changed'));
@@ -423,7 +417,7 @@ export default function OrderDetail() {
               <FormControl fullWidth size="small">
                 <InputLabel>Статус заказа</InputLabel>
                 <Select
-                  defaultValue={order?.status_id ?? ''}
+                  value={(editedFields.status_id ?? Number(order?.status_id)) || ''}
                   label="Статус заказа"
                   onChange={(e) =>
                     handleFieldChange('status_id', e.target.value)
@@ -458,7 +452,7 @@ export default function OrderDetail() {
               <FormControl fullWidth size="small">
               <InputLabel>Способ получения</InputLabel>
               <Select
-                defaultValue={order?.delivery_id ?? ''}
+                value={(editedFields.delivery_id ?? Number(order?.delivery_id)) || ''}
                 label="Способ получения"
                   onChange={(e) =>
                     handleFieldChange('delivery_id', e.target.value)
@@ -490,7 +484,7 @@ export default function OrderDetail() {
               <FormControl fullWidth size="small">
                 <InputLabel>Статус оплаты</InputLabel>
                 <Select
-                  defaultValue={order?.payment_status_id ?? ''}
+                  value={(editedFields.payment_status_id ?? Number(order?.payment_status_id)) || ''}
                   label="Статус оплаты"
                   onChange={(e) =>
                     handleFieldChange('payment_status_id', e.target.value)

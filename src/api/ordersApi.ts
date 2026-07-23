@@ -87,11 +87,14 @@ export async function updateOrder(
   orderId: number,
   data: Record<string, unknown>
 ): Promise<void> {
-  return apiPost<void>(
+  const res: any = await apiPost<unknown>(
     endpoint,
     { key: API_KEY, mode: 'putdata', order_id: orderId },
     data
   );
+  if (res && typeof res === 'object' && res.error) {
+    throw new Error(res.error);
+  }
 }
 
 export async function setOrderStatus(

@@ -956,13 +956,12 @@ case 'getitemstorage':
 		
 		$oldStatusId = $orderObject->getValue('status_id');
 		$newStatusId = $_REQUEST['status_id'];
-		$order=order::get($order_id);
 
 		if($oldStatusId != $newStatusId) {
-		//$orderObject->setValue('status_id', $_REQUEST['status_id']);
-		$order->setOrderStatus($newStatusId);
+		$orderObject->setValue('status_id', $_REQUEST['status_id']);
 		}
 
+		$orderObject->setValue('status_change_date', time());
 		$orderObject->setValue('payment_id', $_REQUEST['payment_id']);
 		$orderObject->setValue('payment_status_id', $_REQUEST['payment_status_id']);
 		$orderObject->setValue('delivery_id', $_REQUEST['delivery_id']);
@@ -982,8 +981,7 @@ case 'getitemstorage':
 		$orderObject->setValue('quantity', $_REQUEST['quantity']);
 		
 		$addressObject->commit();
-		$order->refresh();
-		$order->commit();
+		$orderObject->commit();
 		echo json_encode($_REQUEST, JSON_UNESCAPED_UNICODE);
 	break;
 	

@@ -188,6 +188,13 @@ app.use('/endpoint.php', (req, res) => {
   const proxyReq = https.request(opts, (proxyRes) => {
     res.writeHead(proxyRes.statusCode, proxyRes.headers);
     proxyRes.pipe(res);
+    if (path.includes('mode=putdata') && proxyRes.statusCode === 200) {
+      proxyRes.on('end', () => {
+        setMeta('lastSyncTime', new Date(Date.now() - 120000).toISOString());
+        saveDb();
+        syncOrders().catch(e => console.error('Post-putdata sync error:', e.message));
+      });
+    }
   });
   proxyReq.on('error', (err) => {
     res.status(500).send('Proxy error: ' + err.message);
