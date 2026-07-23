@@ -3,7 +3,9 @@ import {
   Box, Typography, TextField, Button, Alert, CircularProgress, Paper,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { registerChat } from '../api/maxApi';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { registerChat, unregisterChat, checkChatRegistered } from '../api/maxApi';
+import { login } from '../api/auth';
 
 declare global {
   interface Window {
@@ -26,7 +28,9 @@ export default function MaxApp() {
   const [chatId, setChatId] = useState('');
   const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'loading' | 'ready' | 'done' | 'error'>('loading');
+  const [password, setPassword] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [status, setStatus] = useState<'loading' | 'login' | 'registering' | 'done' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -39,38 +43,94 @@ export default function MaxApp() {
         if (data.user?.id) setUserId(String(data.user.id));
         wa.ready();
       } else {
-        setMessage('initDataUnsafe отсутствует. WebApp есть, но нет данных инициализации.');
+        setMessage('initDataUnsafe отсутствует.');
         setStatus('error');
+        return;
       }
     } else {
-      setMessage('Объект WebApp не найден. Откройте страницу из приложения MAX через бота.');
+      setMessage('Откройте страницу из приложения MAX через бота.');
       setStatus('error');
+      return;
     }
-    setStatus('ready');
   }, []);
 
-  const handleRegister = async () => {
+  useEffect(() => {
     const effectiveId = userId || chatId;
-    if (!effectiveId) {
-      setMessage('Не удалось определить chat_id. Откройте страницу из приложения MAX.');
+    if (!effectiveId) return;
+    checkChatRegistered(effectiveId).then((res) => {
+      if (res.registered) {
+        setRegisteredEmail(res.email || '');
+        setMessage('Вы уже подключены к уведомлениям MAX.');
+        setStatus('done');
+      } else {
+        setStatus('login');
+      }
+    }).catch(() => setStatus('login'));
+  }, [chatId, userId]);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setMessage('Введите email и пароль.');
       setStatus('error');
       return;
     }
     setStatus('loading');
     try {
-      const res = await registerChat(effectiveId, email);
-      if (res.ok) {
+      const res = await login(email, password);
+      if (!res.ok) {
+        setMessage(res.error || 'Неверный логин или пароль');
+        setStatus('error');
+        return;
+      }
+    } catch {
+      setMessage('Ошибка сети');
+      setStatus('error');
+      return;
+    }
+
+    const effectiveId = userId || chatId;
+    if (!effectiveId) {
+      setMessage('Не удалось определить chat_id.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('registering');
+    try {
+      const reg = await registerChat(effectiveId, email);
+      if (reg.ok) {
         setStatus('done');
-        setMessage('Подключение MAX выполнено! Теперь вы будете получать уведомления о заказах.');
+        setMessage('Подключение MAX выполнено!');
       } else {
         setStatus('error');
-        setMessage('Ошибка: ' + ((res as any).error || 'неизвестная'));
+        setMessage('Ошибка: ' + ((reg as any).error || 'неизвестная'));
       }
     } catch {
       setStatus('error');
       setMessage('Ошибка сети');
     }
   };
+
+  const handleUnregister = async () => {
+    const effectiveId = userId || chatId;
+    if (!effectiveId) return;
+    setStatus('loading');
+    try {
+      const res = await unregisterChat(effectiveId);
+      if (res.ok) {
+        setStatus('login');
+        setMessage('Вы отписались от уведомлений MAX.');
+      } else {
+        setStatus('error');
+        setMessage('Ошибка: ' + (res.error || 'неизвестная'));
+      }
+    } catch {
+      setStatus('error');
+      setMessage('Ошибка сети');
+    }
+  };
+
+  const effectiveId = userId || chatId;
 
   return (
     <Box sx={{ maxWidth: 420, mx: 'auto', mt: 6, p: 3 }}>
@@ -80,42 +140,58 @@ export default function MaxApp() {
         {status === 'done' ? (
           <Box sx={{ textAlign: 'center' }}>
             <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
-            <Alert severity="success">{message}</Alert>
+            <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>
+            {effectiveId && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Chat ID: {effectiveId}
+              </Typography>
+            )}
+            {registeredEmail && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Email: {registeredEmail}
+              </Typography>
+            )}
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<CancelIcon />}
+              onClick={handleUnregister}
+              disabled={status === 'loading'}
+            >
+              Отписаться от уведомлений
+            </Button>
           </Box>
         ) : (
           <>
-            {userId && (
+            {effectiveId && (
               <Alert severity="info" sx={{ mb: 2 }}>
-                Подключено к чату MAX (ID: {userId})
+                Chat ID: {effectiveId}
               </Alert>
             )}
 
             <TextField
-              label="Email (логин)"
+              label="Email"
               fullWidth size="small"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{ mb: 2 }}
-              helperText="Укажите ваш email для связи с аккаунтом"
             />
 
-            {!userId && !chatId && (
-              <TextField
-                label="Chat ID (вручную)"
-                fullWidth size="small"
-                value={chatId}
-                onChange={(e) => setChatId(e.target.value)}
-                sx={{ mb: 2 }}
-                helperText="Введите chat_id вручную или откройте через бота в MAX"
-              />
-            )}
+            <TextField
+              label="Пароль"
+              type="password"
+              fullWidth size="small"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{ mb: 2 }}
+            />
 
             <Button
               variant="contained" fullWidth
-              onClick={handleRegister}
-              disabled={status === 'loading' || !(userId || chatId)}
+              onClick={handleLogin}
+              disabled={status === 'loading' || status === 'registering' || !email || !password || !effectiveId}
             >
-              {status === 'loading' ? <CircularProgress size={20} /> : 'Подключить'}
+              {(status === 'loading' || status === 'registering') ? <CircularProgress size={20} /> : 'Войти'}
             </Button>
 
             {message && (
@@ -123,7 +199,6 @@ export default function MaxApp() {
                 {message}
               </Alert>
             )}
-
           </>
         )}
       </Paper>

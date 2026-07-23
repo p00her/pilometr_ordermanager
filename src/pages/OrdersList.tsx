@@ -28,8 +28,12 @@ import {
   ListItemText,
   Collapse,
 } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import SyncIcon from '@mui/icons-material/Sync';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import IconButton from '@mui/material/IconButton';
 import { getCachedOrders, triggerSync, getReferenceData, API_URL } from '../api/ordersApi';
 import { getAllOrders, replaceOrders, mergeOrders, getMeta, setMeta } from '../db/db';
 import type { Order, ReferenceData } from '../types';
@@ -238,30 +242,31 @@ export default function OrdersList() {
       <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <Typography variant="h5">Заказы</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {autoRefresh ? '🔄 авт.' : '⏸ пауза'}
-          </Typography>
-          {lastSyncLabel && (
-            <Typography variant="caption" color="text.secondary">
-              {lastSyncLabel}
-            </Typography>
-          )}
           {newCount > 0 && (
             <Chip label={`+${newCount}`} size="small" color="info" />
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: theme.palette.action.hover, borderRadius: 1, px: 1, py: 0.5 }}>
+          <IconButton
             size="small"
-            variant={autoRefresh ? 'outlined' : 'contained'}
-            color={autoRefresh ? 'inherit' : 'primary'}
+            color={autoRefresh ? 'primary' : 'default'}
             onClick={() => setAutoRefresh((a) => !a)}
+            title={autoRefresh ? 'Остановить автообновление' : 'Включить автообновление'}
           >
-            {autoRefresh ? 'Пауза' : 'Авто'}
-          </Button>
-          <Button size="small" variant="outlined" onClick={() => { setNewCount(0); sync(true); }} disabled={syncing}>
-            {syncing ? '...' : 'Руч. синх.'}
-          </Button>
+            {autoRefresh ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
+          </IconButton>
+          <Typography variant="caption" color="text.secondary" sx={{ minWidth: 80, textAlign: 'center', lineHeight: '32px' }}>
+            {syncing ? 'синхронизация...' : (lastSyncLabel || '—')}
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => { setNewCount(0); sync(true); }}
+            disabled={syncing}
+            sx={{ animation: syncing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } } }}
+            title="Ручная синхронизация"
+          >
+            <SyncIcon fontSize="small" />
+          </IconButton>
         </Box>
       </Box>
 

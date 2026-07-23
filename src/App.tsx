@@ -35,20 +35,16 @@ export default function App() {
     </ThemeContextProvider>
   );
 
-  if (!authed) {
-    return (
-      <ThemeContextProvider>
-        <Login onLogin={(name) => { setAuthed(true); setUserName(name); }} />
-      </ThemeContextProvider>
-    );
-  }
-
   return (
     <ThemeContextProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/max-app" element={<MaxApp />} />
-          <Route path="/" element={<Layout userName={userName} onLogout={async () => { await apiLogout(); setAuthed(false); }} />}>
+          <Route path="/*" element={
+            !authed
+              ? <Login onLogin={(name) => { setAuthed(true); setUserName(name); }} />
+              : <Layout userName={userName} onLogout={async () => { await apiLogout(); setAuthed(false); }} />
+          }>
             <Route index element={<Dashboard />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<OrderDetail />} />
