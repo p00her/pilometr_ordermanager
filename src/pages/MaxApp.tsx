@@ -156,7 +156,6 @@ export default function MaxApp() {
               color="error"
               startIcon={<CancelIcon />}
               onClick={handleUnregister}
-              disabled={status === 'loading'}
             >
               Отписаться от уведомлений
             </Button>
