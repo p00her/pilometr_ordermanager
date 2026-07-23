@@ -46,7 +46,7 @@ import { sendMaxNotification } from '../api/maxApi';
 import { getNote, saveNote } from '../api/notesApi';
 import axios from 'axios';
 const API_URL = '/endpoint.php';
-import { saveOrders, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems } from '../db/db';
+import { saveOrders, getMeta, setMeta, getCachedStorageItems, setCachedStorageItems, getOrderById } from '../db/db';
 import { type Order, type OrderDetail, type OrderItem, type ReferenceData, STORAGE_LABELS } from '../types';
 import { paletteColor } from '../constants';
 
@@ -220,7 +220,8 @@ export default function OrderDetail() {
         const fresh = await getOrderDetail(API_URL, orderId);
         setOrder(fresh);
         setItems(fresh?.items ?? []);
-        await saveOrders([{ ...fresh, id: orderId } as Order]).catch(() => {});
+        const cachedOrder = await getOrderById(orderId).catch(() => undefined);
+        await saveOrders([{ ...cachedOrder, ...fresh, id: orderId } as Order]).catch(() => {});
       } catch {
         setOrder((prev) => prev ? { ...prev, ...editedFields } as OrderDetail : null);
       }
