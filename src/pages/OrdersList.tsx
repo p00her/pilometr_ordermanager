@@ -265,9 +265,9 @@ export default function OrdersList() {
             <Chip label={`+${newCount}`} size="small" color="info" />
           )}
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: theme.palette.action.hover, borderRadius: 1, px: 1, py: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, bgcolor: theme.palette.action.hover, borderRadius: 1, px: 1, py: 0.5 }}>
           {autoRefresh && !syncing && countdown > 0 && (
-            <Typography variant="caption" color="text.disabled" sx={{ minWidth: 24, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+            <Typography variant="caption" color="text.disabled" sx={{ display: 'flex', alignItems: 'center', minWidth: 24, justifyContent: 'center', fontVariantNumeric: 'tabular-nums' }}>
               {countdown}с
             </Typography>
           )}
@@ -279,7 +279,7 @@ export default function OrdersList() {
           >
             {autoRefresh ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
-          <Typography variant="caption" color="text.secondary" sx={{ minWidth: 80, textAlign: 'center', lineHeight: '32px' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', minWidth: 80, justifyContent: 'center' }}>
             {syncing ? 'синхронизация...' : (lastSyncLabel || '—')}
           </Typography>
           <IconButton
