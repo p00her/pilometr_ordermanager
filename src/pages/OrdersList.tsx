@@ -266,6 +266,11 @@ export default function OrdersList() {
           )}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: theme.palette.action.hover, borderRadius: 1, px: 1, py: 0.5 }}>
+          {autoRefresh && !syncing && countdown > 0 && (
+            <Typography variant="caption" color="text.disabled" sx={{ minWidth: 24, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+              {countdown}с
+            </Typography>
+          )}
           <IconButton
             size="small"
             color={autoRefresh ? 'primary' : 'default'}
@@ -276,11 +281,6 @@ export default function OrdersList() {
           </IconButton>
           <Typography variant="caption" color="text.secondary" sx={{ minWidth: 80, textAlign: 'center', lineHeight: '32px' }}>
             {syncing ? 'синхронизация...' : (lastSyncLabel || '—')}
-            {autoRefresh && !syncing && countdown > 0 && (
-              <Typography variant="caption" color="text.disabled" component="span" sx={{ ml: 0.5 }}>
-                {countdown}с
-              </Typography>
-            )}
           </Typography>
           <IconButton
             size="small"
