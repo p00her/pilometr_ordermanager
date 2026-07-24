@@ -689,7 +689,7 @@ case 'getstat':
 		//'r_volume' => $orderObject->getValue('r_volume'),
 		'poluchatel' => $orderObject->getValue('poluchatel'),
 		'mobtelefon' => $orderObject->getValue('mobtelefon'),
-		'email' => $orderObject->getValue('email'),
+		'email' => $orderObject->getValue('e-mail'),
 		'comment' => $addressObject->getValue('comment'),
 		'status_change_date' => $orderObject->getValue('status_change_date') ? date('d.m.Y H:i', $orderObject->getValue('status_change_date')) : '',
 		//'point_coords' => $addressObject->getValue('point_coords'),
