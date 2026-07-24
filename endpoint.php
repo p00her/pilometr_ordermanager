@@ -703,23 +703,28 @@ case 'getstat':
 
 		foreach($orderObject->order_items as $orderItem){
 			$item = $objectsCollection->getObject($orderItem);
-			$item_page= $item->item_link;
-			$page = $hierarchy->getElement($item_page[0]->id); 
+			$pageId = null;
+			$itemLinkVal = $item->item_link;
+			if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
+				if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
+				elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
+			} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+			$page = $pageId ? $hierarchy->getElement($pageId) : null;
 			if (!empty($orderItem)){
 				$it['name']=$item->name;
 				$it['amount']=$item->item_amount;
 				$it['price']=$item->item_price;
 				$it['id']=(int)$orderItem;
-				$it['volume']=$page->getValue('volume');
-				$it['width']=$page->getValue('shirina');
-				$it['height']=$page->getValue('tolshchina_mm');
-				$it['length']=$page->getValue('dlina');
-				$it['weight']=$page->getValue('weight');
-				$it['volhov_storage']=$page->getValue('volhov_storage');
-				$it['lomonosov_storage']=$page->getValue('lomonosov_storage');
-				$it['roshino_storage']=$page->getValue('roshino_storage');
-				$it['skotnoe_storage']=$page->getValue('skotnoe_storage');
-				$it['ladoga_storage']=$page->getValue('ladoga_storage');
+				if($page) $it['volume']=$page->getValue('volume');
+				if($page) $it['width']=$page->getValue('shirina');
+				if($page) $it['height']=$page->getValue('tolshchina_mm');
+				if($page) $it['length']=$page->getValue('dlina');
+				if($page) $it['weight']=$page->getValue('weight');
+				if($page) $it['volhov_storage']=$page->getValue('volhov_storage');
+				if($page) $it['lomonosov_storage']=$page->getValue('lomonosov_storage');
+				if($page) $it['roshino_storage']=$page->getValue('roshino_storage');
+				if($page) $it['skotnoe_storage']=$page->getValue('skotnoe_storage');
+				if($page) $it['ladoga_storage']=$page->getValue('ladoga_storage');
 				if($page) $it['bar_code']=$page->getValue('bar_code');
 				if($page) $it['artikul']=$page->getValue('artikul');
 				$orderdata['items'][] = $it;
@@ -739,9 +744,13 @@ case 'getitemstorage':
     foreach($itemIds as $orderItemId){
         $item = $objectsCollection->getObject($orderItemId);
         if ($item) {
-            $item_page = $item->item_link;
-            if (!empty($item_page) && isset($item_page[0])) {
-                $pid = $item_page[0]->id;
+            $pid = null;
+            $itemLinkVal = $item->item_link;
+            if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
+                if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pid = $itemLinkVal[0]->id;
+                elseif (is_numeric($itemLinkVal[0])) $pid = $itemLinkVal[0];
+            } elseif (is_numeric($itemLinkVal)) $pid = $itemLinkVal;
+            if ($pid) {
                 $pageIds[] = $pid;
                 $itemMap[(int)$orderItemId] = $pid;
             }
@@ -832,19 +841,24 @@ case 'getitemstorage':
 					$order_data['delivery_price'] = $order->delivery_price;
 					if (null!==$order->getValue('delivery_aw_date')) $order_data['delivery_aw_date'] = $order->delivery_aw_date->getFormattedDate('d.m.Y H:i'); else $order_data['delivery_aw_date'] = 0;
 					}
-					foreach($order->order_items as $orderItem){
-					$item = $objectsCollection->getObject($orderItem);
-					$item_page= $item->item_link;
-					$page = $hierarchy->getElement($item_page[0]->id); 
-					if (!empty($orderItem)){
-						$it['name']=$item->name;
-						$it['amount']=$item->item_amount;
-						$it['price']=$item->item_price;
-						if($page) $it['bar_code']=$page->getValue('bar_code');
-						if($page) $it['artikul']=$page->getValue('artikul');
-						$order_data['items'][] = $it;
-					}
-					}
+				foreach($order->order_items as $orderItem){
+				$item = $objectsCollection->getObject($orderItem);
+				$pageId = null;
+				$itemLinkVal = $item->item_link;
+				if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
+					if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
+					elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
+				} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+				$page = $pageId ? $hierarchy->getElement($pageId) : null;
+				if (!empty($orderItem)){
+					$it['name']=$item->name;
+					$it['amount']=$item->item_amount;
+					$it['price']=$item->item_price;
+					if($page) $it['bar_code']=$page->getValue('bar_code');
+					if($page) $it['artikul']=$page->getValue('artikul');
+					$order_data['items'][] = $it;
+				}
+				}
 					
 					$order_data['price']=$order->getValue('total_price');
 
@@ -891,60 +905,93 @@ case 'getitemstorage':
 	
 	case 'setexported':
 	if (!isset($data['order_id'])) {echo 'Error: order_id is not set'; exit;} else {
-		$order=order::get($data['order_id']);
-		$order->setValue('retail_export', 0);
-		$order->refresh();
-		$order->commit();
-		echo json_encode($order->retail_export, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+		$orderObject->setValue('retail_export', 0);
+		$orderObject->commit();
+		echo json_encode($orderObject->getValue('retail_export'), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }
 	break;
 	
 	case 'removeitem':
 	$item_id = $_REQUEST['item_id'];
-	$order=order::get($order_id);
-	$item=$order->getItem($item_id);
-	$order->removeItem($item);
-	$order->refresh();
+	$items = $orderObject->getValue('order_items');
+	if (is_array($items)) {
+		$newItems = array();
+		foreach ($items as $oid) {
+			if ($oid != $item_id) $newItems[] = $oid;
+		}
+		$orderObject->setValue('order_items', $newItems);
+		$orderObject->commit();
+	}
 	break;
 	
 	case 'setamount':
 	foreach ($_REQUEST['items'] as $item){
-		$orderitem=orderItem::get($item['id']);
-		if($item['value'] != $orderitem->getAmount()) {
-		$orderitem->setAmount($item['value']);
-		$orderitem->refresh();
+		$orderitemObj = $objectsCollection->getObject($item['id']);
+		if ($orderitemObj && $item['value'] != $orderitemObj->getValue('item_amount')) {
+			$orderitemObj->setValue('item_amount', $item['value']);
+			$orderitemObj->commit();
 		}
 	}
-	$order=order::get($order_id);
-	$order->refresh();
 	break;
 	
 	case 'appenditems':
-	$order=order::get($order_id);
-	$orderitems=$order->getItems();
+	$currentItems = $orderObject->getValue('order_items');
+	if (!is_array($currentItems)) $currentItems = array();
 	foreach ($_REQUEST['append_items'] as $appenditem){
-		$check=0;
-		$add_pages = $hierarchy->getObjectInstances($appenditem['add_id']);
-		foreach($orderitems as $orderitem){
-		$item_page = $orderitem->item_link;
-		$page = $hierarchy->getElement($item_page[0]->id);
-		$object_id = $page->getObjectId();
-		if ($appenditem['add_id']==$object_id){
-			$oldamount= $orderitem->getAmount();
-			$newamount=$oldamount+$appenditem['add_amount'];
-			$orderitem->setAmount($newamount);
-			$check=1;
+		$check = 0;
+		foreach ($currentItems as $oid) {
+			$oi = $objectsCollection->getObject($oid);
+			if ($oi) {
+				$pageId = null;
+				$itemLinkVal = $oi->getValue('item_link');
+				if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
+					if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
+					elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
+				} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+				if ($pageId) {
+					$page = $hierarchy->getElement($pageId);
+					if ($page && $page->getObjectId() == $appenditem['add_id']) {
+						$oldAmount = $oi->getValue('item_amount');
+						$oi->setValue('item_amount', $oldAmount + $appenditem['add_amount']);
+						$oi->commit();
+						$check = 1;
+					}
+				}
+			}
 		}
-
-		}
-		if ($check==0) {
-		$tOrderItem = orderItem::create($add_pages[0]);
-		$tOrderItem->setAmount($appenditem['add_amount']);
-		$order->appendItem($tOrderItem);
-		print_r($add_pages);
+		if ($check == 0) {
+			$addPages = $hierarchy->getObjectInstances($appenditem['add_id']);
+			if (!empty($addPages)) {
+				$addPageId = $addPages[0];
+				$addPage = $hierarchy->getElement($addPageId);
+				$newOITypeId = null;
+				if (count($currentItems) > 0) {
+					$firstOI = $objectsCollection->getObject($currentItems[0]);
+					if ($firstOI) $newOITypeId = $firstOI->typeId;
+				}
+				if (!$newOITypeId) {
+					$types = $typesCollection->getSubTypesList(7);
+					if (!empty($types)) $newOITypeId = reset($types);
+				}
+				if ($newOITypeId) {
+					$objectName = $addPage ? $addPage->getName() : (string)$appenditem['add_id'];
+					$newOId = $objectsCollection->addObject($objectName, $newOITypeId);
+					if ($newOId) {
+						$newOI = $objectsCollection->getObject($newOId);
+						if ($newOI) {
+							$newOI->setValue('item_link', $addPageId);
+							$newOI->setValue('item_amount', $appenditem['add_amount']);
+							if ($addPage) $newOI->setValue('item_price', $addPage->getValue('price'));
+							$newOI->commit();
+							$currentItems[] = $newOI->getId();
+						}
+					}
+				}
+			}
 		}
 	}
-	$order->refresh();
+	$orderObject->setValue('order_items', $currentItems);
+	$orderObject->commit();
 	break;
 	
 	case 'putdata':
@@ -1046,8 +1093,13 @@ case 'getitemstorage':
 					}
 					foreach($order->order_items as $orderItem){
 					$item = $objectsCollection->getObject($orderItem);
-					$item_page= $item->item_link;
-					$page = $hierarchy->getElement($item_page[0]->id); 
+					$pageId = null;
+					$itemLinkVal = $item->item_link;
+					if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
+						if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
+						elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
+					} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+					$page = $pageId ? $hierarchy->getElement($pageId) : null;
 					if (!empty($orderItem)){
 						$it['name']=$item->name;
 						$it['amount']=$item->item_amount;

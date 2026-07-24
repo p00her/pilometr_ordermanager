@@ -326,16 +326,17 @@ export default function OrderDetail() {
         orderId,
         pendingItems.map((p) => ({ add_id: p.id, add_amount: p.amount }))
       );
-      const newItems: OrderItem[] = pendingItems.map((p) => ({
-        name: p.name,
-        amount: p.amount,
-        price: 0,
-      }));
-      setItems((prev) => [...prev, ...newItems]);
       setAddDialogOpen(false);
       setPendingItems([]);
       setAddBarcode('');
       window.dispatchEvent(new CustomEvent('order-changed'));
+      const detail = await getOrderDetail(API_URL, orderId);
+      if (detail && !detail.email) {
+        const cached = await getOrderById(orderId).catch(() => undefined);
+        if (cached?.email) detail.email = cached.email;
+      }
+      setOrder(detail);
+      setItems(detail?.items ?? []);
     } catch {
       setError('Ошибка добавления товаров');
     }
