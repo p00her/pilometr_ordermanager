@@ -96,6 +96,10 @@ export default function OrderDetail() {
       setLoading(true);
       try {
         const detail = await getOrderDetail(API_URL, orderId);
+        if (detail && !detail.email) {
+          const cached = await getOrderById(orderId).catch(() => undefined);
+          if (cached?.email) detail.email = cached.email;
+        }
         setOrder(detail);
         setItems(detail?.items ?? []);
       } catch {
@@ -221,7 +225,11 @@ export default function OrderDetail() {
         setOrder(fresh);
         setItems(fresh?.items ?? []);
         const cachedOrder = await getOrderById(orderId).catch(() => undefined);
-        await saveOrders([{ ...cachedOrder, ...fresh, id: orderId } as Order]).catch(() => {});
+        const merged = { ...cachedOrder, ...fresh, id: orderId };
+        if ((!merged.email || merged.email === '') && cachedOrder?.email) {
+          merged.email = cachedOrder.email;
+        }
+        await saveOrders([merged as Order]).catch(() => {});
       } catch {
         setOrder((prev) => prev ? { ...prev, ...editedFields } as OrderDetail : null);
       }
