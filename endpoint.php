@@ -705,10 +705,11 @@ case 'getstat':
 			$item = $objectsCollection->getObject($orderItem);
 			$pageId = null;
 			$itemLinkVal = $item->item_link;
-			if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
-				if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
-				elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
-			} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+			if (is_array($itemLinkVal)) {
+				if (count($itemLinkVal) > 0) $pageId = $itemLinkVal[0]->id;
+			} elseif (is_numeric($itemLinkVal)) {
+				$pageId = $itemLinkVal;
+			}
 			$page = $pageId ? $hierarchy->getElement($pageId) : null;
 			if (!empty($orderItem)){
 				$it['name']=$item->name;
@@ -746,9 +747,8 @@ case 'getitemstorage':
         if ($item) {
             $pid = null;
             $itemLinkVal = $item->item_link;
-            if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
-                if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pid = $itemLinkVal[0]->id;
-                elseif (is_numeric($itemLinkVal[0])) $pid = $itemLinkVal[0];
+            if (is_array($itemLinkVal)) {
+                if (count($itemLinkVal) > 0) $pid = $itemLinkVal[0]->id;
             } elseif (is_numeric($itemLinkVal)) $pid = $itemLinkVal;
             if ($pid) {
                 $pageIds[] = $pid;
@@ -845,10 +845,9 @@ case 'getitemstorage':
 				$item = $objectsCollection->getObject($orderItem);
 				$pageId = null;
 				$itemLinkVal = $item->item_link;
-				if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
-					if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
-					elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
-				} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+			if (is_array($itemLinkVal)) {
+				if (count($itemLinkVal) > 0) $pageId = $itemLinkVal[0]->id;
+			} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
 				$page = $pageId ? $hierarchy->getElement($pageId) : null;
 				if (!empty($orderItem)){
 					$it['name']=$item->name;
@@ -942,13 +941,12 @@ case 'getitemstorage':
 		foreach ($currentItems as $oid) {
 			$oi = $objectsCollection->getObject($oid);
 			if ($oi) {
-				$pageId = null;
-				$itemLinkVal = $oi->getValue('item_link');
-				if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
-					if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
-					elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
-				} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
-				if ($pageId) {
+			$pageId = null;
+			$itemLinkVal = $oi->getValue('item_link');
+			if (is_array($itemLinkVal)) {
+				if (count($itemLinkVal) > 0) $pageId = $itemLinkVal[0]->id;
+			} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
+			if ($pageId) {
 					$page = $hierarchy->getElement($pageId);
 					if ($page && $page->getObjectId() == $appenditem['add_id']) {
 						$oldAmount = $oi->getValue('item_amount');
@@ -1095,9 +1093,8 @@ case 'getitemstorage':
 					$item = $objectsCollection->getObject($orderItem);
 					$pageId = null;
 					$itemLinkVal = $item->item_link;
-					if (is_array($itemLinkVal) && count($itemLinkVal) > 0) {
-						if (is_object($itemLinkVal[0]) && isset($itemLinkVal[0]->id)) $pageId = $itemLinkVal[0]->id;
-						elseif (is_numeric($itemLinkVal[0])) $pageId = $itemLinkVal[0];
+					if (is_array($itemLinkVal)) {
+						if (count($itemLinkVal) > 0) $pageId = $itemLinkVal[0]->id;
 					} elseif (is_numeric($itemLinkVal)) $pageId = $itemLinkVal;
 					$page = $pageId ? $hierarchy->getElement($pageId) : null;
 					if (!empty($orderItem)){
