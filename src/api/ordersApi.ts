@@ -64,11 +64,15 @@ export async function getOrderDetail(
   endpoint: string,
   orderId: number
 ): Promise<OrderDetail> {
-  return apiPost<OrderDetail>(endpoint, {
+  const data = await apiPost<Record<string, unknown>>(endpoint, {
     key: API_KEY,
     mode: 'getdata',
     order_id: orderId,
   });
+  if (data && !data.email && data['e-mail']) {
+    data.email = data['e-mail'] as string;
+  }
+  return data as unknown as OrderDetail;
 }
 
 export async function getItemStorage(
